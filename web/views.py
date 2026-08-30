@@ -8,7 +8,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q, Count
-from .models import Place, Review, ReviewLike, CATEGORY_CHOICES, ReviewReport, Bookmark, Notification
+from .models import (
+    Place,
+    Review,
+    ReviewLike,
+    CATEGORY_CHOICES,
+    ReviewReport,
+    Bookmark,
+    Notification,
+)
 from .forms import RegisterForm, ReviewForm, PlaceForm, ProfileUpdateForm
 
 
@@ -17,20 +25,24 @@ def place_list(request):
     category = request.GET.get("category", "")
     tab = request.GET.get("tab", "places")
     feed_filter = request.GET.get("sort", "trending")
+    selected_filter = request.GET.get("filter", "")
 
-    places = Place.objects.filter(is_approved=True)
+    places = Place.objects.filter(is_approved=True).prefetch_related("reviews")
+    if selected_filter == "saved" and request.user.is_authenticated:
+        places = places.filter(bookmarked_by__user=request.user)
+    elif category:
+        places = places.filter(category=category)
+
     if query:
         places = places.filter(
             Q(name__icontains=query)
             | Q(address__icontains=query)
             | Q(description__icontains=query)
         )
-    if category:
-        places = places.filter(category=category)
 
     # กรองรีวิวเฉพาะของสถานที่ที่อนุมัติแล้วเท่านั้น
     reviews_qs = Review.objects.filter(place__is_approved=True).select_related(
-        "place", "user"
+        "place", "user__profile"
     )
 
     if feed_filter == "latest":
@@ -71,14 +83,17 @@ def place_list(request):
             "user_bookmarked_place_ids": list(user_bookmarked_place_ids),
             "current_tab": tab,
             "feed_filter": feed_filter,
+            "selected_filter": selected_filter,
         },
     )
 
 
 def place_detail(request, pk):
     place = get_object_or_404(Place, pk=pk)
-    reviews = place.reviews.annotate(likes_count=Count("likes")).order_by(
-        "-likes_count", "-created_at"
+    reviews = (
+        place.reviews.annotate(likes_count=Count("likes"))
+        .select_related("user__profile")
+        .order_by("-likes_count", "-created_at")
     )
     form = ReviewForm()
 
@@ -151,7 +166,7 @@ def toggle_like_review(request, review_id):
                 user=review.user,
                 title="มีคนถูกใจรีวิวของคุณ ❤️",
                 message=f"{request.user.username} ถูกใจรีวิวของคุณที่ '{review.place.name}'",
-                link=f"/place/{review.place.pk}/"
+                link=f"/place/{review.place.pk}/",
             )
 
     return redirect(request.META.get("HTTP_REFERER", "place_list"))
@@ -244,10 +259,14 @@ def profile_view(request):
         form = ProfileUpdateForm(instance=profile)
 
     # ดึงรีวิวที่ผู้ใช้คนนี้เคยเขียน
-    user_reviews = request.user.review_set.select_related("place").order_by("-created_at")
+    user_reviews = request.user.review_set.select_related("place").order_by(
+        "-created_at"
+    )
 
     # คำนวณเหรียญตรา
     badges = profile.get_badges() if hasattr(profile, "get_badges") else []
+
+    bookmarked_places = Place.objects.filter(bookmarked_by__user=request.user)
 
     context = {
         "form": form,
@@ -255,12 +274,15 @@ def profile_view(request):
         "reviews": user_reviews,
         "badges": badges,
         "total_reviews": user_reviews.count(),
+        "bookmarked_places": bookmarked_places,
     }
     return render(request, "profile.html", context)
 
 
 def user_profile_view(request, username):
-    profile_user = get_object_or_404(User, username=username)
+    profile_user = get_object_or_404(
+        User.objects.select_related("profile"), username=username
+    )
     reviews = profile_user.review_set.select_related("place").order_by("-created_at")
     badges = profile_user.profile.get_badges()
     total_likes = profile_user.profile.total_likes_received()
