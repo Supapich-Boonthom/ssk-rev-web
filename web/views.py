@@ -235,7 +235,20 @@ def profile_view(request):
     else:
         form = ProfileUpdateForm(instance=profile)
 
-    return render(request, "profile.html", {"form": form, "profile": profile})
+    # ดึงรีวิวที่ผู้ใช้คนนี้เคยเขียน
+    user_reviews = request.user.review_set.select_related("place").order_by("-created_at")
+
+    # คำนวณเหรียญตรา
+    badges = profile.get_badges() if hasattr(profile, "get_badges") else []
+
+    context = {
+        "form": form,
+        "profile": profile,
+        "reviews": user_reviews,
+        "badges": badges,
+        "total_reviews": user_reviews.count(),
+    }
+    return render(request, "profile.html", context)
 
 
 def user_profile_view(request, username):
