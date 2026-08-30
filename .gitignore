@@ -1,0 +1,25 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Environment Variables & Secrets
+.env
+
+# SQLite Database
+*.sqlite3
+db.sqlite3
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Static files / Build
+staticfiles/
+staticfiles\admin/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
