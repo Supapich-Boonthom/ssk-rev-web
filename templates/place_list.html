@@ -71,14 +71,14 @@
     class="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col"
   >
     <div class="h-48 bg-gray-100 overflow-hidden relative">
-      <!-- ปุ่ม Bookmark บนการ์ดสถานที่ -->
-      <a
-        href="{% url 'toggle_bookmark' place.pk %}"
-        class="absolute top-3 left-3 p-2 rounded-xl backdrop-blur-md transition shadow-sm z-10 {% if place.pk in user_bookmarked_place_ids %}bg-amber-600 text-white{% else %}bg-white/90 text-gray-600 hover:bg-white{% endif %}"
-        title="บันทึกสถานที่โปรด"
-      >
-        {% if place.pk in user_bookmarked_place_ids %}🔖{% else %}📑{% endif %}
-      </a>
+      <!-- แสดงไอคอนริบบิ้นเฉพาะเมื่อบันทึกไว้แล้ว (ไม่รกสายตา) -->
+      {% if place.pk in user_bookmarked_place_ids %}
+      <div class="absolute top-3 left-3 bg-amber-500/90 text-white p-1.5 rounded-lg shadow-sm backdrop-blur-sm z-10 flex items-center justify-center" title="บันทึกไว้แล้ว">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+          <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+        </svg>
+      </div>
+      {% endif %}
       {% if place.image and place.image.url %}
       <img
         src="{{ place.image.url }}"
