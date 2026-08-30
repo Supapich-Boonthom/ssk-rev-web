@@ -1,6 +1,18 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<!-- Cropper.js CSS & JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+<style>
+  /* บังคับให้กรอบครอบตัดของ Cropper แสดงเป็นวงกลมจำลอง */
+  .cropper-view-box,
+  .cropper-face {
+    border-radius: 50%;
+  }
+</style>
+
 <div class="max-w-6xl mx-auto px-4 py-8">
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     
@@ -9,9 +21,10 @@
       <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100 text-center sticky top-24">
         <!-- รูปโปรไฟล์ Avatar -->
         <img 
+          id="avatar-preview"
           src="{{ profile.avatar_url }}" 
           alt="{{ request.user.username }}" 
-          class="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-amber-100 shadow-sm"
+          class="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-amber-100 shadow-sm transition-all"
         >
         <h2 class="text-xl font-bold text-gray-800">{{ request.user.username }}</h2>
         <p class="text-xs text-gray-500 mb-6">{{ request.user.email }}</p>
@@ -33,7 +46,13 @@
           {% csrf_token %}
           <div>
             <label class="block text-xs font-bold text-gray-600 mb-1">เปลี่ยนรูปโปรไฟล์</label>
-            <input type="file" name="avatar" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer">
+            <input 
+              type="file" 
+              name="avatar" 
+              id="avatar-input" 
+              accept="image/*" 
+              class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer"
+            >
           </div>
 
           <div>
@@ -108,4 +127,131 @@
 
   </div>
 </div>
+
+<!-- ================= Modal ครอบรูปโปรไฟล์ ================= -->
+<div id="crop-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-amber-100">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+        <span>✂️</span> ปรับตำแหน่งและขนาดรูปโปรไฟล์
+      </h3>
+      <button type="button" id="close-modal-btn" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
+    </div>
+
+    <!-- พื้นที่แสดงรูปสำหรับเลื่อน/ซูม -->
+    <div class="w-full h-72 sm:h-80 bg-gray-900 rounded-2xl overflow-hidden flex items-center justify-center">
+      <img id="image-to-crop" class="max-w-full block" src="" alt="Source Image">
+    </div>
+
+    <!-- ปุ่มควบคุมซูม -->
+    <div class="flex justify-center items-center gap-4 my-4">
+      <button type="button" id="zoom-out-btn" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold text-gray-700 transition">
+        🔍- ซูมออก
+      </button>
+      <button type="button" id="zoom-in-btn" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold text-gray-700 transition">
+        🔍+ ซูมเข้า
+      </button>
+    </div>
+
+    <!-- ปุ่มกดยืนยัน -->
+    <div class="flex justify-end gap-2 border-t border-gray-100 pt-4">
+      <button type="button" id="cancel-crop-btn" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition">
+        ยกเลิก
+      </button>
+      <button type="button" id="apply-crop-btn" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-xl transition shadow-sm">
+        เสร็จสิ้น
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let cropper = null;
+  const avatarInput = document.getElementById('avatar-input');
+  const cropModal = document.getElementById('crop-modal');
+  const imageToCrop = document.getElementById('image-to-crop');
+  const avatarPreview = document.getElementById('avatar-preview');
+
+  const applyCropBtn = document.getElementById('apply-crop-btn');
+  const cancelCropBtn = document.getElementById('cancel-crop-btn');
+  const closeModalBtn = document.getElementById('close-modal-btn');
+  const zoomInBtn = document.getElementById('zoom-in-btn');
+  const zoomOutBtn = document.getElementById('zoom-out-btn');
+
+  // เมื่อผู้ใช้เลือกไฟล์รูป
+  avatarInput.addEventListener('change', function(e) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(event) {
+        imageToCrop.src = event.target.result;
+        cropModal.classList.remove('hidden');
+
+        // ทำลาย instance เดิมถ้ามี
+        if (cropper) {
+          cropper.destroy();
+        }
+
+        // เริ่มต้น Cropper.js
+        cropper = new Cropper(imageToCrop, {
+          aspectRatio: 1, // สัดส่วน 1:1 (สี่เหลี่ยมจัตุรัสสำหรับทำวงกลม)
+          viewMode: 1,
+          dragMode: 'move',
+          autoCropArea: 0.85,
+          restore: false,
+          guides: false,
+          center: false,
+          highlight: false,
+          cropBoxMovable: true,
+          cropBoxResizable: true,
+          toggleDragModeOnDblclick: false,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // ซูมเข้า - ออก
+  zoomInBtn.addEventListener('click', () => cropper && cropper.zoom(0.1));
+  zoomOutBtn.addEventListener('click', () => cropper && cropper.zoom(-0.1));
+
+  // ฟังก์ชันปิด Modal
+  function closeModal() {
+    cropModal.classList.add('hidden');
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+  }
+
+  closeModalBtn.addEventListener('click', closeModal);
+  cancelCropBtn.addEventListener('click', closeModal);
+
+  // เมื่อกด "เสร็จสิ้น" ในกล่อง Crop
+  applyCropBtn.addEventListener('click', () => {
+    if (!cropper) return;
+
+    // ได้รูป Canvas ขนาด 400x400 คมชัดพอดีสำหรับโปรไฟล์
+    const canvas = cropper.getCroppedCanvas({
+      width: 400,
+      height: 400,
+    });
+
+    // 1. อัปเดตรูปแสดงผลบนหน้าโปรไฟล์ทันที (Instant Preview)
+    avatarPreview.src = canvas.toDataURL('image/jpeg');
+
+    // 2. แปลง Canvas เป็นไฟล์ Blob แล้วยัดกลับเข้า Input File อัตโนมัติ เพื่อส่งไปเซฟที่ Django
+    canvas.toBlob((blob) => {
+      const croppedFile = new File([blob], "avatar.jpg", { type: "image/jpeg" });
+      
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(croppedFile);
+      avatarInput.files = dataTransfer.files;
+      
+      closeModal();
+    }, 'image/jpeg', 0.9);
+  });
+</script>
 {% endblock %}

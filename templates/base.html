@@ -113,16 +113,6 @@
       </div>
     </nav>
 
-    <!-- Messages Banner -->
-    <div class="max-w-6xl mx-auto px-4 mt-4 w-full">
-      {% if messages %} {% for message in messages %}
-      <div
-        class="p-4 rounded-xl mb-3 text-sm font-medium {% if message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200{% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200{% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}"
-      >
-        {{ message }}
-      </div>
-      {% endfor %} {% endif %}
-    </div>
 
     <!-- Main Content -->
     <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
@@ -153,6 +143,68 @@
           }
         });
       }
+    </script>
+
+    <!-- Toast Notification ลอยมุมขวาบน -->
+    {% if messages %}
+      <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full px-4 pointer-events-none">
+        {% for message in messages %}
+          <div class="toast-item pointer-events-auto flex items-center justify-between p-4 rounded-2xl shadow-xl border transition-all duration-300 transform translate-y-0 opacity-100 
+            {% if message.tags == 'success' %} bg-emerald-500 text-white border-emerald-400
+            {% elif message.tags == 'error' %} bg-rose-500 text-white border-rose-400
+            {% else %} bg-amber-500 text-white border-amber-400 {% endif %}">
+            
+            <div class="flex items-center gap-2 text-sm font-medium">
+              {% if message.tags == 'success' %}<span>✅</span>
+              {% elif message.tags == 'error' %}<span>⚠️</span>
+              {% else %}<span>✨</span>{% endif %}
+              <span>{{ message }}</span>
+            </div>
+    
+            <button onclick="this.parentElement.remove()" class="text-white/80 hover:text-white text-xs ml-3 font-bold">✕</button>
+          </div>
+        {% endfor %}
+      </div>
+    
+      <script>
+        setTimeout(() => {
+          const toasts = document.querySelectorAll('.toast-item');
+          toasts.forEach(toast => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px)';
+            setTimeout(() => toast.remove(), 300);
+          });
+        }, 3500);
+      </script>
+    {% endif %}
+
+    <!-- ระบบป้องกันการกดปุ่มซ้ำ (Double Submit) -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const forms = document.querySelectorAll('form');
+        
+        forms.forEach(form => {
+          form.addEventListener('submit', function() {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            if (submitBtn && !submitBtn.disabled) {
+              setTimeout(() => {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
+                submitBtn.innerHTML = `
+                  <span class="inline-flex items-center gap-2">
+                    <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    กำลังบันทึก...
+                  </span>
+                `;
+              }, 50);
+            }
+          });
+        });
+      });
     </script>
   </body>
 </html>
