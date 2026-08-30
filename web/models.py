@@ -60,6 +60,13 @@ class Place(models.Model):
 
     @property
     def average_rating(self):
+        # ตรวจสอบว่าถูกดึงผ่าน prefetch_related แล้วหรือไม่เพื่อป้องกัน N+1
+        if hasattr(self, "_prefetched_objects_cache") and "reviews" in self._prefetched_objects_cache:
+            reviews_list = list(self.reviews.all())
+            if not reviews_list:
+                return 0.0
+            return round(sum(r.rating for r in reviews_list) / len(reviews_list), 1)
+
         reviews = self.reviews.all()
         if not reviews.exists():
             return 0.0
