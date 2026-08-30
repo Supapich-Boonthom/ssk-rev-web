@@ -246,10 +246,31 @@ class Profile(models.Model):
         return f"{self.user.username} Profile"
 
 
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    link = models.CharField(max_length=200, blank=True, null=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.title}"
+
+
 @receiver(post_save, sender=User)
 def create_or_save_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
+        Notification.objects.create(
+            user=instance,
+            title="ยินดีต้อนรับสู่ Sisaket Reviews! ✨",
+            message="ขอบคุณสำหรับการสมัครสมาชิก เริ่มต้นสำรวจ ค้นหา และแบ่งปันรีวิวสถานที่ท่องเที่ยวหรือร้านอาหารประทับใจในศรีสะเกษกับเราได้เลยครับ",
+            link="/"
+        )
     else:
         if hasattr(instance, 'profile'):
             instance.profile.save()

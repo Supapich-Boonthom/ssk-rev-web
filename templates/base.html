@@ -35,9 +35,59 @@
           </div>
           <div class="flex items-center gap-4">
             {% if user.is_authenticated %}
-            <a href="{% url 'profile' %}" class="flex items-center gap-2">
+            <!-- ปุ่มรูประฆังพร้อม Dropdown -->
+            <div class="relative">
+              <button id="notif-btn" class="relative p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-full transition focus:outline-none flex items-center justify-center">
+                <!-- SVG ไอคอนระฆัง -->
+                <svg class="w-6 h-6 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+
+                <!-- จุดสีแดงแจ้งเตือน (ขึ้นเฉพาะเมื่อมีข้อความที่ยังไม่ได้อ่าน) -->
+                {% if unread_notifications_count > 0 %}
+                  <span class="absolute top-1 right-1 flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                  </span>
+                {% endif %}
+              </button>
+
+              <!-- กล่องข้อความแจ้งเตือน Dropdown Menu -->
+              <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-amber-100 py-3 z-50">
+                <div class="flex items-center justify-between px-4 pb-2 border-b border-gray-100">
+                  <span class="text-xs font-bold text-gray-800">การแจ้งเตือน</span>
+                  {% if unread_notifications_count > 0 %}
+                    <a href="{% url 'mark_all_read' %}" class="text-[11px] text-amber-600 hover:underline">อ่านทั้งหมด</a>
+                  {% endif %}
+                </div>
+
+                <div class="max-h-72 overflow-y-auto divide-y divide-gray-50">
+                  {% for notif in recent_notifications %}
+                    <a href="{% url 'read_notification' notif.pk %}" class="block px-4 py-2.5 hover:bg-amber-50/50 transition {% if not notif.is_read %}bg-amber-50/30{% endif %}">
+                      <div class="flex items-start gap-2">
+                        <span class="text-base mt-0.5">🔔</span>
+                        <div class="flex-1">
+                          <h5 class="text-xs font-semibold text-gray-800">{{ notif.title }}</h5>
+                          <p class="text-[11px] text-gray-500 line-clamp-2 mt-0.5">{{ notif.message }}</p>
+                          <span class="text-[9px] text-gray-400 mt-1 block">{{ notif.created_at|timesince }} ที่แล้ว</span>
+                        </div>
+                        {% if not notif.is_read %}
+                          <span class="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1.5"></span>
+                        {% endif %}
+                      </div>
+                    </a>
+                  {% empty %}
+                    <div class="text-center py-6 text-xs text-gray-400">
+                      ไม่มีการแจ้งเตือนใหม่
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <a href="{% url 'profile' %}" class="flex items-center gap-2 ml-1">
               <img src="{{ user.profile.avatar_url }}" class="w-8 h-8 rounded-full object-cover border border-amber-100 shadow-sm">
-              <span class="text-sm font-medium text-gray-600 hover:text-amber-600 transition">
+              <span class="text-sm font-medium text-gray-600 hover:text-amber-600 transition hidden sm:inline">
                 สวัสดี, <strong class="text-gray-900">{{ user.username }}</strong>
               </span>
             </a>
@@ -85,5 +135,24 @@
     >
       © Sisaket Reviews - เว็บรีวิวสถานที่ท่องเที่ยวและคาเฟ่ในตัวจังหวัดศรีสะเกษ
     </footer>
+    <!-- JavaScript สำหรับคลิกเปิด/ปิด Dropdown -->
+    <script>
+      const notifBtn = document.getElementById('notif-btn');
+      const notifDropdown = document.getElementById('notif-dropdown');
+    
+      if (notifBtn && notifDropdown) {
+        notifBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          notifDropdown.classList.toggle('hidden');
+        });
+    
+        // ปิดเมนูเมื่อคลิกที่อื่นบนหน้าจอ
+        document.addEventListener('click', (e) => {
+          if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+            notifDropdown.classList.add('hidden');
+          }
+        });
+      }
+    </script>
   </body>
 </html>

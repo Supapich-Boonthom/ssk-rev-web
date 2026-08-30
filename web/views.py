@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q, Count
-from .models import Place, Review, ReviewLike, CATEGORY_CHOICES, ReviewReport, Bookmark
+from .models import Place, Review, ReviewLike, CATEGORY_CHOICES, ReviewReport, Bookmark, Notification
 from .forms import RegisterForm, ReviewForm, PlaceForm, ProfileUpdateForm
 
 
@@ -145,6 +145,14 @@ def toggle_like_review(request, review_id):
         like.delete()
     else:
         ReviewLike.objects.create(review=review, user=request.user)
+        # สร้างการแจ้งเตือนสำหรับเจ้าของรีวิว (ยกเว้นกดถูกใจรีวิวตัวเอง)
+        if review.user != request.user:
+            Notification.objects.create(
+                user=review.user,
+                title="มีคนถูกใจรีวิวของคุณ ❤️",
+                message=f"{request.user.username} ถูกใจรีวิวของคุณที่ '{review.place.name}'",
+                link=f"/place/{review.place.pk}/"
+            )
 
     return redirect(request.META.get("HTTP_REFERER", "place_list"))
 
@@ -282,3 +290,19 @@ def delete_review(request, pk):
         return redirect("place_detail", pk=place_pk)
 
     return redirect("place_detail", pk=review.place.pk)
+
+
+@login_required(login_url="login")
+def read_notification(request, pk):
+    notif = get_object_or_404(Notification, pk=pk, user=request.user)
+    notif.is_read = True
+    notif.save()
+    if notif.link:
+        return redirect(notif.link)
+    return redirect("profile")
+
+
+@login_required(login_url="login")
+def mark_all_notifications_read(request):
+    request.user.notifications.filter(is_read=False).update(is_read=True)
+    return redirect(request.META.get("HTTP_REFERER", "place_list"))
