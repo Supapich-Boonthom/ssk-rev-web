@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from cloudinary.models import CloudinaryField
 
 CATEGORY_CHOICES = [
     ("cafe", "คาเฟ่ / ร้านอาหาร"),
@@ -154,3 +157,88 @@ class ReviewReport(models.Model):
 
     def __str__(self):
         return f"Report on Review #{self.review.id} by {self.user.username}"
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    avatar = CloudinaryField('image', blank=True, null=True)
+    bio = models.TextField(max_length=300, blank=True)
+
+    @property
+    def avatar_url(self):
+        if self.avatar:
+            return self.avatar.url
+        return f"https://ui-avatars.com/api/?name={self.user.username}&background=f59e0b&color=fff&bold=true"
+
+    def get_badges(self):
+        """คำนวณเหรียญตราที่ได้รับตามเงื่อนไข"""
+        badges = []
+        reviews = self.user.review_set.all()
+        total_reviews = reviews.count()
+        
+        # 1. นักรีวิวมือใหม่
+        if total_reviews >= 1:
+            badges.append({
+                'name': 'นักรีวิวมือใหม่',
+                'icon': '🌱',
+                'desc': 'เขียนรีวิวแรกบน Sisaket Reviews',
+                'color': 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            })
+            
+        # 2. กูรูคาเฟ่
+        cafe_reviews = reviews.filter(place__category='cafe').count()
+        if cafe_reviews >= 3:
+            badges.append({
+                'name': 'กูรูคาเฟ่',
+                'icon': '☕',
+                'desc': 'รีวิวคาเฟ่และร้านอาหารครบ 3 แห่ง',
+                'color': 'bg-amber-50 text-amber-700 border-amber-200'
+            })
+
+        # 3. สายบุญ & วัฒนธรรม
+        temple_reviews = reviews.filter(place__category='temple').count()
+        if temple_reviews >= 2:
+            badges.append({
+                'name': 'สายวัฒนธรรม',
+                'icon': '🏛️',
+                'desc': 'รีวิวสถานที่ท่องเที่ยวเชิงวัฒนธรรมครบ 2 แห่ง',
+                'color': 'bg-purple-50 text-purple-700 border-purple-200'
+            })
+
+        # 4. เด็กถิ่นศรีสะเกษ
+        if total_reviews >= 5:
+            badges.append({
+                'name': 'เด็กถิ่นศรีสะเกษ',
+                'icon': '🏆',
+                'desc': 'รีวิวสถานที่รวมครบ 5 แห่ง',
+                'color': 'bg-orange-50 text-orange-700 border-orange-200'
+            })
+
+        # 5. ขวัญใจชาวศรีสะเกษ
+        total_likes = self.total_likes_received()
+        if total_likes >= 10:
+            badges.append({
+                'name': 'ขวัญใจชาวศรีสะเกษ',
+                'icon': '❤️',
+                'desc': 'ได้รับยอดไลก์สะสมจากรีวิวทั้งหมดครบ 10 ไลก์',
+                'color': 'bg-rose-50 text-rose-700 border-rose-200'
+            })
+
+        return badges
+
+    def total_likes_received(self):
+        """นับยอดไลก์สะสมจากทุกรีวิวที่ผู้ใช้คนนี้เขียน"""
+        total = sum(review.likes.count() for review in self.user.review_set.all())
+        return total
+
+    def __str__(self):
+        return f"{self.user.username} Profile"
+
+
+@receiver(post_save, sender=User)
+def create_or_save_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+    else:
+        if hasattr(instance, 'profile'):
+            instance.profile.save()

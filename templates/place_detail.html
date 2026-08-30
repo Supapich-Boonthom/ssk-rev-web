@@ -199,14 +199,12 @@
       <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <div
-              class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 font-bold flex items-center justify-center text-xs uppercase"
-            >
-              {{ review.user.username|slice:":1" }}
-            </div>
+            <a href="{% url 'user_profile' review.user.username %}">
+              <img src="{{ review.user.profile.avatar_url }}" class="w-8 h-8 rounded-full object-cover border border-amber-100 shadow-sm hover:opacity-80 transition">
+            </a>
             <div>
-              <h4 class="text-sm font-semibold text-gray-900">
-                {{ review.user.username }}
+              <h4 class="text-sm font-semibold text-gray-900 hover:text-amber-600 transition">
+                <a href="{% url 'user_profile' review.user.username %}">{{ review.user.username }}</a>
               </h4>
               <span class="text-[11px] text-gray-400"
                 >{{ review.created_at|date:"d M Y H:i" }}</span

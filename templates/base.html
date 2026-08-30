@@ -35,13 +35,15 @@
           </div>
           <div class="flex items-center gap-4">
             {% if user.is_authenticated %}
-            <span class="text-sm font-medium text-gray-600"
-              >สวัสดี,
-              <strong class="text-gray-900">{{ user.username }}</strong></span
-            >
+            <a href="{% url 'profile' %}" class="flex items-center gap-2">
+              <img src="{{ user.profile.avatar_url }}" class="w-8 h-8 rounded-full object-cover border border-amber-100 shadow-sm">
+              <span class="text-sm font-medium text-gray-600 hover:text-amber-600 transition">
+                สวัสดี, <strong class="text-gray-900">{{ user.username }}</strong>
+              </span>
+            </a>
             <a
               href="{% url 'logout' %}"
-              class="text-sm text-red-500 hover:text-red-700 font-medium"
+              class="text-sm text-red-500 hover:text-red-700 font-medium ml-2"
               >ออกจากระบบ</a
             >
             {% else %}

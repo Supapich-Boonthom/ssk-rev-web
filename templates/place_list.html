@@ -1,4 +1,10 @@
 {% extends 'base.html' %} {% block content %}
+<!-- Leaflet CSS & JS -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- Hero & Header Section -->
 <div class="text-center py-6">
   <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
@@ -63,8 +69,37 @@
   </div>
 </div>
 
+<!-- แถบปุ่มสลับมุมมอง -->
+<div class="flex justify-end max-w-6xl mx-auto px-4 mb-4">
+  <div class="inline-flex bg-gray-100 p-1 rounded-xl shadow-inner gap-1">
+    <button
+      id="view-cards-btn"
+      class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-800 shadow-sm transition"
+    >
+      <span>📋</span> รายการ
+    </button>
+    <button
+      id="view-map-btn"
+      class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:text-gray-800 transition"
+    >
+      <span>🗺️</span> แผนที่
+    </button>
+  </div>
+</div>
+
+<!-- ส่วนแสดงผลแผนที่ (ซ่อนไว้เป็นค่าเริ่มต้น) -->
+<div id="map-wrapper" class="hidden max-w-6xl mx-auto px-4 mb-8">
+  <div
+    id="map"
+    class="w-full h-96 sm:h-[480px] rounded-3xl shadow-sm border border-amber-100 z-0"
+  ></div>
+</div>
+
 <!-- Places Grid -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+<div
+  id="places-container"
+  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+>
   {% for place in places %}
   <a
     href="{% url 'place_detail' place.pk %}"
@@ -73,13 +108,15 @@
     <div class="h-48 bg-gray-100 overflow-hidden relative">
       <!-- แสดงไอคอนริบบิ้นเฉพาะเมื่อบันทึกไว้แล้ว (ไม่รกสายตา) -->
       {% if place.pk in user_bookmarked_place_ids %}
-      <div class="absolute top-3 left-3 bg-amber-500/90 text-white p-1.5 rounded-lg shadow-sm backdrop-blur-sm z-10 flex items-center justify-center" title="บันทึกไว้แล้ว">
+      <div
+        class="absolute top-3 left-3 bg-amber-500/90 text-white p-1.5 rounded-lg shadow-sm backdrop-blur-sm z-10 flex items-center justify-center"
+        title="บันทึกไว้แล้ว"
+      >
         <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
-          <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+          <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
       </div>
-      {% endif %}
-      {% if place.image and place.image.url %}
+      {% endif %} {% if place.image and place.image.url %}
       <img
         src="{{ place.image.url }}"
         alt="{{ place.name }}"
@@ -113,7 +150,9 @@
         {% if place.get_tag_list %}
         <div class="flex flex-wrap gap-1 mt-2">
           {% for tag in place.get_tag_list %}
-          <span class="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-md font-medium">
+          <span
+            class="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-md font-medium"
+          >
             #{{ tag }}
           </span>
           {% endfor %}
@@ -209,14 +248,12 @@
     <!-- Author Header -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div
-          class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 font-bold flex items-center justify-center text-sm uppercase"
-        >
-          {{ review.user.username|slice:":1" }}
-        </div>
+        <a href="{% url 'user_profile' review.user.username %}">
+          <img src="{{ review.user.profile.avatar_url }}" class="w-10 h-10 rounded-full object-cover border border-amber-100 shadow-sm hover:opacity-80 transition">
+        </a>
         <div>
-          <h3 class="font-bold text-gray-900 text-sm">
-            {{ review.user.username }}
+          <h3 class="font-bold text-gray-900 text-sm hover:text-amber-600 transition">
+            <a href="{% url 'user_profile' review.user.username %}">{{ review.user.username }}</a>
           </h3>
           <span class="text-xs text-gray-400"
             >{{ review.created_at|date:"d M Y เวลา H:i น." }}</span
@@ -294,4 +331,137 @@
   </div>
   {% endfor %}
 </div>
-{% endif %} {% endblock %}
+{% endif %}
+
+<script>
+  let mapInitialized = false;
+  let map = null;
+  let markers = [];
+
+  // ดึงข้อมูลสถานที่จาก Django Context
+  const placesData = [
+    {% for place in places %}
+      {% if place.latitude and place.longitude %}
+      {
+        id: {{ place.pk }},
+        name: "{{ place.name|escapejs }}",
+        category: "{{ place.category }}",
+        lat: {{ place.latitude }},
+        lng: {{ place.longitude }},
+        rating: "{{ place.average_rating|default:'0.0' }}",
+        address: "{{ place.address|default:''|escapejs }}",
+        detailUrl: "{% url 'place_detail' place.pk %}"
+      },
+      {% endif %}
+    {% endfor %}
+  ];
+
+  const cardsBtn = document.getElementById('view-cards-btn');
+  const mapBtn = document.getElementById('view-map-btn');
+  const mapWrapper = document.getElementById('map-wrapper');
+  const placesContainer = document.getElementById('places-container'); // ปรับ ID ให้ตรงกับกล่องรายการการ์ดเดิม
+
+  // ฟังก์ชันสลับไปมุมมองการ์ด
+  cardsBtn.addEventListener('click', () => {
+    cardsBtn.classList.add('bg-white', 'text-gray-800', 'shadow-sm');
+    cardsBtn.classList.remove('text-gray-500');
+    mapBtn.classList.remove('bg-white', 'text-gray-800', 'shadow-sm');
+    mapBtn.classList.add('text-gray-500');
+
+    mapWrapper.classList.add('hidden');
+    if (placesContainer) placesContainer.classList.remove('hidden');
+  });
+
+  // ฟังก์ชันสลับไปมุมมองแผนที่
+  mapBtn.addEventListener('click', () => {
+    mapBtn.classList.add('bg-white', 'text-gray-800', 'shadow-sm');
+    mapBtn.classList.remove('text-gray-500');
+    cardsBtn.classList.remove('bg-white', 'text-gray-800', 'shadow-sm');
+    cardsBtn.classList.add('text-gray-500');
+
+    if (placesContainer) placesContainer.classList.add('hidden');
+    mapWrapper.classList.remove('hidden');
+
+    // สร้างแผนที่เมื่อเปิดใช้งานครั้งแรก
+    if (!mapInitialized) {
+      initLeafletMap();
+      mapInitialized = true;
+    } else {
+      setTimeout(() => { map.invalidateSize(); }, 200);
+    }
+  });
+
+  function initLeafletMap() {
+    // 1. ตั้งค่าเริ่มต้นที่ศรีสะเกษ
+    map = L.map('map').setView([15.1186, 104.3220], 10);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    renderMapMarkers('all');
+
+    // 2. ตรวจหาตำแหน่งของผู้ใช้ (Geolocation)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLat = position.coords.latitude;
+          const userLng = position.coords.longitude;
+
+          // วงกลมระบุรัศมีรอบตัวผู้ใช้
+          L.circle([userLat, userLng], {
+            radius: position.coords.accuracy || 100,
+            color: '#3b82f6',
+            fillColor: '#60a5fa',
+            fillOpacity: 0.15,
+            weight: 1
+          }).addTo(map);
+
+          // หมุดไอคอนสีฟ้าสำหรับตำแหน่งของผู้ใช้
+          const userIcon = L.divIcon({
+            className: 'custom-user-marker',
+            html: `<div class="w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow-lg ring-4 ring-blue-300/50 animate-pulse"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+          });
+
+          const userMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(map);
+          userMarker.bindPopup('<b class="text-xs text-blue-600">📍 ตำแหน่งของคุณ</b>').openPopup();
+
+          // เลื่อนมุมกล้องไปหาผู้ใช้แบบนุ่มนวล
+          map.flyTo([userLat, userLng], 13, { duration: 1.5 });
+        },
+        (error) => {
+          console.log("ผู้ใช้ไม่อนุญาตให้เข้าถึงตำแหน่ง หรือเกิดข้อผิดพลาด:", error.message);
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+  }
+
+  function renderMapMarkers(categoryFilter = 'all') {
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+
+    placesData.forEach(p => {
+      if (categoryFilter === 'all' || p.category === categoryFilter) {
+        const marker = L.marker([p.lat, p.lng]).addTo(map);
+
+        const popupHTML = `
+          <div class="p-1 min-w-[140px] text-center font-sans">
+            <h4 class="font-bold text-gray-800 text-sm mb-1">${p.name}</h4>
+            <span class="text-xs font-semibold text-amber-500">★ ${p.rating}</span>
+            <div class="mt-2">
+              <a href="${p.detailUrl}" class="inline-block px-3 py-1 bg-amber-500 text-white text-xs font-medium rounded-lg hover:bg-amber-600 no-underline shadow-sm">
+                ดูรีวิว
+              </a>
+            </div>
+          </div>
+        `;
+        marker.bindPopup(popupHTML);
+        markers.push(marker);
+      }
+    });
+  }
+</script>
+{% endblock %}

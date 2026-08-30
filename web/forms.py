@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Place, Review
+from .models import Place, Review, Profile
 from .moderation import mask_profanity
 
 
@@ -116,3 +116,9 @@ class ReviewForm(forms.ModelForm):
     def clean_comment(self):
         comment = self.cleaned_data.get("comment", "")
         return mask_profanity(comment)
+
+
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['avatar', 'bio']
