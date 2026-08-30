@@ -1,31 +1,111 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-md mx-auto my-10 p-6 bg-white rounded-3xl shadow-sm border border-amber-100 text-center">
-  <!-- รูปโปรไฟล์กลม (มีรูปเริ่มต้นอัตโนมัติ) -->
-  <img 
-    src="{{ profile.avatar_url }}" 
-    alt="{{ user.username }}" 
-    class="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-amber-100 shadow-sm"
-  >
-  <h2 class="text-xl font-bold text-gray-800">{{ user.username }}</h2>
-  <p class="text-xs text-gray-500 mb-6">{{ user.email|default:"ผู้ใช้งาน Sisaket Reviews" }}</p>
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- คอลัมน์ซ้าย: ข้อมูลส่วนตัว & ฟอร์มแก้ไข -->
+    <div class="lg:col-span-1">
+      <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100 text-center sticky top-24">
+        <!-- รูปโปรไฟล์ Avatar -->
+        <img 
+          src="{{ profile.avatar_url }}" 
+          alt="{{ request.user.username }}" 
+          class="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-amber-100 shadow-sm"
+        >
+        <h2 class="text-xl font-bold text-gray-800">{{ request.user.username }}</h2>
+        <p class="text-xs text-gray-500 mb-6">{{ request.user.email }}</p>
 
-  <form method="POST" enctype="multipart/form-data" class="text-left space-y-4">
-    {% csrf_token %}
-    <div>
-      <label class="block text-xs font-bold text-gray-600 mb-1">เปลี่ยนรูปโปรไฟล์</label>
-      <input type="file" name="avatar" class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer">
+        <!-- แถบสรุปสถิติย่อ -->
+        <div class="grid grid-cols-2 gap-2 py-3 border-y border-gray-100 mb-6 text-center">
+          <div>
+            <span class="block text-lg font-bold text-amber-600">{{ total_reviews }}</span>
+            <span class="text-xs text-gray-400">รีวิวทั้งหมด</span>
+          </div>
+          <div>
+            <span class="block text-lg font-bold text-amber-500">{{ badges|length }}</span>
+            <span class="text-xs text-gray-400">เหรียญตรา</span>
+          </div>
+        </div>
+
+        <!-- ฟอร์มแก้ไขข้อมูล -->
+        <form method="POST" enctype="multipart/form-data" class="text-left space-y-4">
+          {% csrf_token %}
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">เปลี่ยนรูปโปรไฟล์</label>
+            <input type="file" name="avatar" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">แนะนำตัวเองสั้นๆ (Bio)</label>
+            <textarea name="bio" rows="3" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">{{ profile.bio }}</textarea>
+          </div>
+
+          <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-xl transition shadow-sm">
+            บันทึกข้อมูล
+          </button>
+        </form>
+      </div>
     </div>
 
-    <div>
-      <label class="block text-xs font-bold text-gray-600 mb-1">แนะนำตัวเองสั้นๆ (Bio)</label>
-      <textarea name="bio" rows="3" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">{{ profile.bio }}</textarea>
+    <!-- คอลัมน์ขวา: เหรียญตรา & ประวัติการรีวิว -->
+    <div class="lg:col-span-2 space-y-8">
+      
+      <!-- โซนเหรียญตราความสำเร็จ (Badges) -->
+      <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100">
+        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span>🎖️</span> เหรียญตราความสำเร็จ ({{ badges|length }})
+        </h3>
+        
+        {% if badges %}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {% for badge in badges %}
+              <div class="flex items-center gap-3 p-3.5 rounded-2xl border {{ badge.color }}">
+                <span class="text-3xl">{{ badge.icon }}</span>
+                <div>
+                  <h4 class="font-bold text-sm text-gray-800">{{ badge.name }}</h4>
+                  <p class="text-xs text-gray-500">{{ badge.desc }}</p>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="bg-amber-50/60 rounded-2xl p-4 text-center text-xs text-amber-700 border border-amber-100">
+            🌱 ยังไม่มีเหรียญตรา ลองเขียนรีวิวสถานที่แรกเพื่อปลดล็อกเหรียญตรานักสำรวจ!
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- โซนประวัติการรีวิว (My Reviews) -->
+      <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100">
+        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span>📝</span> ประวัติการรีวิวของคุณ ({{ total_reviews }})
+        </h3>
+
+        <div class="space-y-4">
+          {% for review in reviews %}
+            <div class="p-4 rounded-2xl border border-gray-100 hover:border-amber-200 transition bg-gray-50/50">
+              <div class="flex justify-between items-start mb-2">
+                <a href="{% url 'place_detail' review.place.pk %}" class="font-bold text-sm text-gray-800 hover:text-amber-600 transition">
+                  📍 {{ review.place.name }}
+                </a>
+                <span class="text-xs font-semibold text-amber-500">★ {{ review.rating }}</span>
+              </div>
+              <p class="text-xs sm:text-sm text-gray-600 mb-2">{{ review.comment }}</p>
+              <div class="text-[11px] text-gray-400">
+                เขียนเมื่อ {{ review.created_at|date:"d M Y, H:i" }} น.
+              </div>
+            </div>
+          {% empty %}
+            <div class="text-center py-8 text-gray-400 text-xs">
+              คุณยังไม่เคยเขียนรีวิวสถานที่ใดเลย
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
     </div>
 
-    <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-xl transition shadow-sm">
-      บันทึกข้อมูล
-    </button>
-  </form>
+  </div>
 </div>
 {% endblock %}
