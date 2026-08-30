@@ -17,4 +17,6 @@ urlpatterns = [
         views.toggle_bookmark_view,
         name="toggle_bookmark",
     ),
+    path("profile/", views.profile_view, name="profile"),
+    path("user/<str:username>/", views.user_profile_view, name="user_profile"),
 ]

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-10 p-6 bg-white rounded-3xl shadow-sm border border-amber-100 text-center">
+  <!-- รูปโปรไฟล์กลม (มีรูปเริ่มต้นอัตโนมัติ) -->
+  <img 
+    src="{{ profile.avatar_url }}" 
+    alt="{{ user.username }}" 
+    class="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-amber-100 shadow-sm"
+  >
+  <h2 class="text-xl font-bold text-gray-800">{{ user.username }}</h2>
+  <p class="text-xs text-gray-500 mb-6">{{ user.email|default:"ผู้ใช้งาน Sisaket Reviews" }}</p>
+
+  <form method="POST" enctype="multipart/form-data" class="text-left space-y-4">
+    {% csrf_token %}
+    <div>
+      <label class="block text-xs font-bold text-gray-600 mb-1">เปลี่ยนรูปโปรไฟล์</label>
+      <input type="file" name="avatar" class="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer">
+    </div>
+
+    <div>
+      <label class="block text-xs font-bold text-gray-600 mb-1">แนะนำตัวเองสั้นๆ (Bio)</label>
+      <textarea name="bio" rows="3" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">{{ profile.bio }}</textarea>
+    </div>
+
+    <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-xl transition shadow-sm">
+      บันทึกข้อมูล
+    </button>
+  </form>
+</div>
+{% endblock %}

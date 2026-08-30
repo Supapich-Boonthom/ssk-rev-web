@@ -4,10 +4,11 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q, Count
 from .models import Place, Review, ReviewLike, CATEGORY_CHOICES, ReviewReport, Bookmark
-from .forms import RegisterForm, ReviewForm, PlaceForm
+from .forms import RegisterForm, ReviewForm, PlaceForm, ProfileUpdateForm
 
 
 def place_list(request):
@@ -219,3 +220,34 @@ def toggle_bookmark_view(request, place_id):
         messages.success(request, f"บันทึก {place.name} เข้าสิ่งที่อยากไปแล้ว!")
 
     return redirect(request.META.get("HTTP_REFERER", "place_list"))
+
+
+@login_required(login_url="login")
+def profile_view(request):
+    profile = request.user.profile
+    if request.method == "POST":
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "อัปเดตโปรไฟล์ของคุณเรียบร้อยแล้ว!")
+            return redirect("profile")
+    else:
+        form = ProfileUpdateForm(instance=profile)
+
+    return render(request, "profile.html", {"form": form, "profile": profile})
+
+
+def user_profile_view(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    reviews = profile_user.review_set.select_related("place").order_by("-created_at")
+    badges = profile_user.profile.get_badges()
+    total_likes = profile_user.profile.total_likes_received()
+
+    context = {
+        "profile_user": profile_user,
+        "profile": profile_user.profile,
+        "reviews": reviews,
+        "badges": badges,
+        "total_likes": total_likes,
+    }
+    return render(request, "user_profile.html", context)

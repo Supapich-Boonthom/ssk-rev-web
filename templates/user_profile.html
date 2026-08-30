@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <!-- ข้อมูลส่วนตัวและสถิติรวม -->
+  <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-amber-100 mb-8 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+    <img 
+      src="{{ profile.avatar_url }}" 
+      alt="{{ profile_user.username }}" 
+      class="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-amber-100 shadow"
+    >
+    <div class="flex-1 text-center sm:text-left">
+      <h1 class="text-2xl font-bold text-gray-800">{{ profile_user.username }}</h1>
+      <p class="text-sm text-gray-500 mt-1 mb-4">{{ profile.bio|default:"ยังไม่มีคำแนะนำตัว" }}</p>
+      
+      <!-- แถบสถิติ (Counters) -->
+      <div class="flex justify-center sm:justify-start gap-6 border-t border-gray-100 pt-4">
+        <div>
+          <span class="block text-xl font-bold text-amber-600">{{ reviews.count }}</span>
+          <span class="text-xs text-gray-500">รีวิวทั้งหมด</span>
+        </div>
+        <div>
+          <span class="block text-xl font-bold text-rose-500">{{ total_likes }}</span>
+          <span class="text-xs text-gray-500">ไลก์ที่ได้รับ</span>
+        </div>
+        <div>
+          <span class="block text-xl font-bold text-amber-500">{{ badges|length }}</span>
+          <span class="text-xs text-gray-500">เหรียญตรา</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- โซนเหรียญตรา (Badges) -->
+  <div class="mb-8">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <span>🎖️</span> เหรียญตราความสำเร็จ
+    </h3>
+    {% if badges %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        {% for badge in badges %}
+          <div class="flex items-center gap-3 p-3.5 rounded-2xl border {{ badge.color }}">
+            <span class="text-3xl">{{ badge.icon }}</span>
+            <div>
+              <h4 class="font-bold text-sm">{{ badge.name }}</h4>
+              <p class="text-xs opacity-80">{{ badge.desc }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="bg-amber-50/50 rounded-2xl p-4 text-center text-xs text-amber-700 border border-amber-100">
+        ยังไม่มีเหรียญตรา เริ่มเขียนรีวิวสถานที่แรกเพื่อปลดล็อกเหรียญตรา 🌱
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ประวัติการรีวิวของผู้ใช้ -->
+  <div>
+    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <span>📝</span> รีวิวทั้งหมดโดย {{ profile_user.username }}
+    </h3>
+    <div class="space-y-4">
+      {% for review in reviews %}
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-amber-200 transition">
+          <div class="flex justify-between items-start mb-2">
+            <a href="{% url 'place_detail' review.place.pk %}" class="font-bold text-gray-800 hover:text-amber-600 transition">
+              {{ review.place.name }}
+            </a>
+            <span class="text-xs font-semibold text-amber-500">★ {{ review.rating }}</span>
+          </div>
+          <p class="text-sm text-gray-600 mb-3">{{ review.comment }}</p>
+          <div class="text-xs text-gray-400">
+            รีวิวเมื่อ {{ review.created_at|date:"d M Y" }}
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-gray-400 text-sm text-center py-6">ยังไม่เคยเขียนรีวิวสถานที่ใดๆ</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

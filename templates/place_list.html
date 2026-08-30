@@ -248,14 +248,12 @@
     <!-- Author Header -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div
-          class="w-10 h-10 rounded-full bg-amber-100 text-amber-700 font-bold flex items-center justify-center text-sm uppercase"
-        >
-          {{ review.user.username|slice:":1" }}
-        </div>
+        <a href="{% url 'user_profile' review.user.username %}">
+          <img src="{{ review.user.profile.avatar_url }}" class="w-10 h-10 rounded-full object-cover border border-amber-100 shadow-sm hover:opacity-80 transition">
+        </a>
         <div>
-          <h3 class="font-bold text-gray-900 text-sm">
-            {{ review.user.username }}
+          <h3 class="font-bold text-gray-900 text-sm hover:text-amber-600 transition">
+            <a href="{% url 'user_profile' review.user.username %}">{{ review.user.username }}</a>
           </h3>
           <span class="text-xs text-gray-400"
             >{{ review.created_at|date:"d M Y เวลา H:i น." }}</span

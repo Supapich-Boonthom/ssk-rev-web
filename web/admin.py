@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Place, Review, ReviewLike, ReviewReport
+from .models import Place, Review, ReviewLike, ReviewReport, Profile
 
 
 @admin.action(description="อนุมัติสถานที่ที่เลือก")
@@ -26,3 +26,9 @@ class ReviewAdmin(admin.ModelAdmin):
 class ReviewReportAdmin(admin.ModelAdmin):
     list_display = ("review", "reason", "user", "created_at")
     list_filter = ("reason", "created_at")
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "bio")
+    search_fields = ("user__username", "bio")
