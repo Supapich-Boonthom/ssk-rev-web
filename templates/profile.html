@@ -13,7 +13,16 @@
   }
 </style>
 
-<div class="max-w-6xl mx-auto px-4 py-8">
+<div class="max-w-6xl mx-auto px-4 pt-4">
+  <a href="{% url 'place_list' %}" class="inline-flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-amber-600 bg-white hover:bg-amber-50 px-3.5 py-2 rounded-xl border border-gray-200 hover:border-amber-200 transition shadow-sm">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+    </svg>
+    <span>กลับไปหน้าแรก</span>
+  </a>
+</div>
+
+<div class="max-w-6xl mx-auto px-4 pb-8 pt-4">
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     
     <!-- คอลัมน์ซ้าย: ข้อมูลส่วนตัว & ฟอร์มแก้ไข -->
