@@ -95,6 +95,31 @@
         {% endif %}
       </div>
 
+      <!-- โซนสถานที่โปรดที่บันทึกไว้ (My Bookmarks) -->
+      <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100">
+        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span>🔖</span> สถานที่โปรดที่บันทึกไว้ ({{ bookmarked_places.count }})
+        </h3>
+      
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {% for place in bookmarked_places %}
+            <a href="{% url 'place_detail' place.pk %}" class="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 hover:border-amber-300 hover:bg-amber-50/30 transition group">
+              <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-base shrink-0 font-bold">
+                📍
+              </div>
+              <div class="overflow-hidden">
+                <h4 class="text-xs font-bold text-gray-800 group-hover:text-amber-600 truncate">{{ place.name }}</h4>
+                <span class="text-[10px] text-gray-400">{{ place.get_category_display }}</span>
+              </div>
+            </a>
+          {% empty %}
+            <div class="col-span-2 text-center py-6 text-xs text-gray-400">
+              ยังไม่มีสถานที่ที่บันทึกไว้
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
       <!-- โซนประวัติการรีวิว (My Reviews) -->
       <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100">
         <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">

@@ -17,16 +17,20 @@ def place_list(request):
     category = request.GET.get("category", "")
     tab = request.GET.get("tab", "places")
     feed_filter = request.GET.get("sort", "trending")
+    selected_filter = request.GET.get("filter", "")
 
     places = Place.objects.filter(is_approved=True)
+    if selected_filter == "saved" and request.user.is_authenticated:
+        places = places.filter(bookmarked_by__user=request.user)
+    elif category:
+        places = places.filter(category=category)
+
     if query:
         places = places.filter(
             Q(name__icontains=query)
             | Q(address__icontains=query)
             | Q(description__icontains=query)
         )
-    if category:
-        places = places.filter(category=category)
 
     # กรองรีวิวเฉพาะของสถานที่ที่อนุมัติแล้วเท่านั้น
     reviews_qs = Review.objects.filter(place__is_approved=True).select_related(
@@ -71,6 +75,7 @@ def place_list(request):
             "user_bookmarked_place_ids": list(user_bookmarked_place_ids),
             "current_tab": tab,
             "feed_filter": feed_filter,
+            "selected_filter": selected_filter,
         },
     )
 
@@ -249,12 +254,15 @@ def profile_view(request):
     # คำนวณเหรียญตรา
     badges = profile.get_badges() if hasattr(profile, "get_badges") else []
 
+    bookmarked_places = Place.objects.filter(bookmarked_by__user=request.user)
+
     context = {
         "form": form,
         "profile": profile,
         "reviews": user_reviews,
         "badges": badges,
         "total_reviews": user_reviews.count(),
+        "bookmarked_places": bookmarked_places,
     }
     return render(request, "profile.html", context)
 

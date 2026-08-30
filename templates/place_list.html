@@ -55,9 +55,17 @@
   <div class="flex flex-wrap justify-center gap-2 mt-4">
     <a
       href="?tab=places"
-      class="px-4 py-1.5 rounded-full text-xs font-medium {% if not selected_category %}bg-gray-900 text-white{% else %}bg-white text-gray-600 border border-gray-200 hover:border-gray-400{% endif %}"
+      class="px-4 py-1.5 rounded-full text-xs font-medium {% if not selected_category and not selected_filter %}bg-gray-900 text-white{% else %}bg-white text-gray-600 border border-gray-200 hover:border-gray-400{% endif %}"
       >ทั้งหมด</a
     >
+    {% if user.is_authenticated %}
+    <a
+      href="?tab=places&filter=saved"
+      class="px-4 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition {% if selected_filter == 'saved' %}bg-amber-600 text-white{% else %}bg-white text-gray-600 border border-gray-200 hover:border-gray-400{% endif %}"
+    >
+      <span>🔖</span> ที่บันทึกไว้
+    </a>
+    {% endif %}
     {% for cat_key, cat_name in categories %}
     <a
       href="?tab=places&category={{ cat_key }}{% if query %}&q={{ query }}{% endif %}"
