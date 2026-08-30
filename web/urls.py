@@ -19,4 +19,5 @@ urlpatterns = [
     ),
     path("profile/", views.profile_view, name="profile"),
     path("user/<str:username>/", views.user_profile_view, name="user_profile"),
+    path("review/<int:pk>/delete/", views.delete_review, name="delete_review"),
 ]

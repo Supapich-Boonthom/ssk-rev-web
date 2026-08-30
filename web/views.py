@@ -1,6 +1,7 @@
 from datetime import timedelta
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404, redirect
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
@@ -251,3 +252,20 @@ def user_profile_view(request, username):
         "total_likes": total_likes,
     }
     return render(request, "user_profile.html", context)
+
+
+@login_required(login_url="login")
+def delete_review(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+
+    # ตรวจสอบสิทธิ์: หากไม่ใช่เจ้าของรีวิว ให้ตัดสิทธิ์ด้วย Error 403 ทันที
+    if review.user != request.user:
+        raise PermissionDenied
+
+    if request.method == "POST":
+        place_pk = review.place.pk
+        review.delete()
+        messages.success(request, "ลบรีวิวของคุณเรียบร้อยแล้ว")
+        return redirect("place_detail", pk=place_pk)
+
+    return redirect("place_detail", pk=review.place.pk)

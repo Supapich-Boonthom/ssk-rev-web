@@ -4,6 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from cloudinary.models import CloudinaryField
+from .utils import optimize_image
 
 CATEGORY_CHOICES = [
     ("cafe", "คาเฟ่ / ร้านอาหาร"),
@@ -64,6 +65,11 @@ class Place(models.Model):
             return 0.0
         return round(sum(r.rating for r in reviews) / reviews.count(), 1)
 
+    def save(self, *args, **kwargs):
+        if self.image:
+            self.image = optimize_image(self.image)
+        super().save(*args, **kwargs)
+
 
 class Bookmark(models.Model):
     user = models.ForeignKey(
@@ -108,6 +114,11 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.place.name} ({self.rating} ดาว)"
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            self.image = optimize_image(self.image)
+        super().save(*args, **kwargs)
 
 
 class ReviewLike(models.Model):

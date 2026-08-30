@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+  <span class="text-7xl mb-4">🧭</span>
+  <h1 class="text-4xl font-extrabold text-gray-800 mb-2">404</h1>
+  <h2 class="text-xl font-bold text-amber-600 mb-2">ไม่พบหน้าที่คุณต้องการ</h2>
+  <p class="text-sm text-gray-500 max-w-sm mb-6">
+    สถานที่หรือหน้าที่คุณกำลังค้นหาอาจถูกย้าย ลบ หรือไม่มีอยู่จริง
+  </p>
+  <a href="{% url 'place_list' %}" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-xl transition shadow-sm">
+    กลับสู่หน้าหลัก
+  </a>
+</div>
+{% endblock %}
