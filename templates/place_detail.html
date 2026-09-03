@@ -221,6 +221,7 @@
                 >{{ review.created_at|date:"d M Y H:i" }}</span
               >
             </div>
+          </div>
           <div class="flex items-center gap-3">
             <span class="text-amber-500 font-bold text-sm">★ {{ review.rating }}</span>
             {% if review.user == request.user %}
@@ -246,14 +247,33 @@
           {% endfor %}
         </div>
         {% endif %}
-        {% if review.image %}
-        <div class="mt-3">
-          <img
-            src="{{ review.image.url }}"
-            alt="รูปรีวิว"
-            class="max-h-64 rounded-xl object-cover border border-gray-100"
-          />
-        </div>
+        {% if review.images.all %}
+          <div class="flex gap-2.5 overflow-x-auto py-2 no-scrollbar mt-3">
+            {% for img_obj in review.images.all %}
+              <div class="shrink-0 w-44 h-36 sm:w-52 sm:h-40 rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 shadow-sm group">
+                <img 
+                  src="{{ img_obj.image.url }}" 
+                  alt="รูปภาพรีวิว" 
+                  onclick="openImageModal(this.src)"
+                  class="w-full h-full object-cover cursor-pointer group-hover:scale-105 transition-transform duration-300"
+                  title="คลิกเพื่อดูภาพขนาดเต็ม"
+                  loading="lazy"
+                >
+              </div>
+            {% endfor %}
+          </div>
+
+        {% elif review.image %}
+          <div class="mt-3 max-w-md rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 shadow-sm">
+            <img 
+              src="{{ review.image.url }}" 
+              alt="รูปภาพรีวิว" 
+              onclick="openImageModal(this.src)"
+              class="w-full max-h-80 object-cover cursor-pointer hover:scale-[1.02] transition duration-200"
+              title="คลิกเพื่อดูภาพขนาดเต็ม"
+              loading="lazy"
+            >
+          </div>
         {% endif %}
       </div>
       {% empty %}
