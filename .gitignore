@@ -18,6 +18,8 @@ __pycache__/
 # Static files / Build
 staticfiles/
 staticfiles\admin/
+media/
+places/
 
 # IDE & OS files
 .vscode/
