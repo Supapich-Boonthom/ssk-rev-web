@@ -29,7 +29,11 @@ def place_list(request):
     selected_filter = request.GET.get("filter", "")
     selected_tag = request.GET.get("tag", "")
 
-    places = Place.objects.filter(is_approved=True).prefetch_related("reviews")
+    places = (
+        Place.objects.filter(is_approved=True)
+        .annotate(reviews_count=Count("reviews"))
+        .prefetch_related("reviews")
+    )
     if selected_filter == "saved" and request.user.is_authenticated:
         places = places.filter(bookmarked_by__user=request.user)
     elif category:
@@ -49,32 +53,34 @@ def place_list(request):
     # ดึงแท็กทั้งหมดสำหรับแสดงปุ่มกรอง
     all_tags = Tag.objects.all()
 
-    # กรองรีวิวเฉพาะของสถานที่ที่อนุมัติแล้วเท่านั้น
-    reviews_qs = Review.objects.filter(place__is_approved=True).select_related(
-        "place", "user__profile"
-    )
-
-    if feed_filter == "latest":
-        recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
-            "-created_at"
+    # ดึงข้อมูลรีวิวเฉพาะเมื่อเปิดแท็บฟีด (feed) เพื่อประหยัด Query และเวลาโหลด
+    recent_reviews = []
+    if tab == "feed":
+        reviews_qs = Review.objects.filter(place__is_approved=True).select_related(
+            "place", "user__profile"
         )
-    elif feed_filter == "trending":
-        one_week_ago = timezone.now() - timedelta(days=7)
-        recent_reviews = reviews_qs.annotate(
-            weekly_likes=Count("likes", filter=Q(likes__created_at__gte=one_week_ago)),
-            likes_count=Count("likes"),
-        ).order_by("-weekly_likes", "-created_at")
-    else:  # top
-        recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
-            "-likes_count", "-created_at"
-        )
+        if feed_filter == "latest":
+            recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
+                "-created_at"
+            )
+        elif feed_filter == "trending":
+            one_week_ago = timezone.now() - timedelta(days=7)
+            recent_reviews = reviews_qs.annotate(
+                weekly_likes=Count("likes", filter=Q(likes__created_at__gte=one_week_ago)),
+                likes_count=Count("likes"),
+            ).order_by("-weekly_likes", "-created_at")
+        else:  # top
+            recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
+                "-likes_count", "-created_at"
+            )
 
     user_liked_review_ids = []
     user_bookmarked_place_ids = []
     if request.user.is_authenticated:
-        user_liked_review_ids = ReviewLike.objects.filter(
-            user=request.user
-        ).values_list("review_id", flat=True)
+        if tab == "feed":
+            user_liked_review_ids = ReviewLike.objects.filter(
+                user=request.user
+            ).values_list("review_id", flat=True)
         user_bookmarked_place_ids = Bookmark.objects.filter(
             user=request.user
         ).values_list("place_id", flat=True)
@@ -100,10 +106,13 @@ def place_list(request):
 
 
 def place_detail(request, pk):
-    place = get_object_or_404(Place, pk=pk)
+    place = get_object_or_404(
+        Place.objects.prefetch_related("reviews"), pk=pk
+    )
     reviews = (
         place.reviews.annotate(likes_count=Count("likes"))
         .select_related("user__profile")
+        .prefetch_related("tags")
         .order_by("-likes_count", "-created_at")
     )
     form = ReviewForm()

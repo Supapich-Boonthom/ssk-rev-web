@@ -16,6 +16,13 @@
       body {
         font-family: "Prompt", sans-serif;
       }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
     </style>
   </head>
   <body
@@ -288,6 +295,43 @@
       function closeLogoutModal() {
         document.getElementById('logout-modal').classList.add('hidden');
       }
+    </script>
+
+    <!-- Lightbox Modal สำหรับดูภาพขนาดเต็ม -->
+    <div id="image-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300" onclick="closeImageModal()">
+      <!-- ปุ่มกากบาทปิดมุมขวาบน -->
+      <button type="button" class="absolute top-5 right-5 text-white text-3xl font-bold hover:text-amber-400 z-10 p-2" onclick="closeImageModal()">
+        ✕
+      </button>
+      
+      <!-- รูปภาพขนาดเต็ม (คลิกที่รูปแล้วไม่ปิด modal) -->
+      <div class="max-w-4xl max-h-[90vh] flex items-center justify-center" onclick="event.stopPropagation()">
+        <img id="modal-img" src="" alt="ภาพขนาดเต็ม" class="max-w-full max-h-[85vh] object-contain rounded-none shadow-2xl">
+      </div>
+    </div>
+
+    <script>
+      function openImageModal(imgSrc) {
+        const modal = document.getElementById('image-modal');
+        const modalImg = document.getElementById('modal-img');
+        
+        modalImg.src = imgSrc;
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // ล็อกไม่ให้หน้าเว็บเลื่อนตอนดูรูป
+      }
+
+      function closeImageModal() {
+        const modal = document.getElementById('image-modal');
+        modal.classList.add('hidden');
+        document.body.style.overflow = ''; // คืนค่าให้หน้าเว็บเลื่อนได้ปกติ
+      }
+
+      // กดปุ่ม Esc บนคีย์บอร์ดเพื่อปิดได้ด้วย
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeImageModal();
+        }
+      });
     </script>
   </body>
 </html>
