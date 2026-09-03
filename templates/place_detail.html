@@ -12,13 +12,29 @@
   <div
     class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm"
   >
-    {% if place.image %}
-    <div class="h-72 sm:h-96 w-full overflow-hidden">
+    {% if place.image and place.image.url %}
+    <div class="h-72 sm:h-96 w-full overflow-hidden relative bg-amber-50">
       <img
         src="{{ place.image.url }}"
         alt="{{ place.name }}"
         class="w-full h-full object-cover"
+        onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
       />
+      <div class="w-full h-full hidden items-center justify-center text-amber-500 text-6xl">
+        🏞️
+      </div>
+    </div>
+    {% elif place.image_url %}
+    <div class="h-72 sm:h-96 w-full overflow-hidden relative bg-amber-50">
+      <img
+        src="{{ place.image_url }}"
+        alt="{{ place.name }}"
+        class="w-full h-full object-cover"
+        onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+      />
+      <div class="w-full h-full hidden items-center justify-center text-amber-500 text-6xl">
+        🏞️
+      </div>
     </div>
     {% endif %}
     <div class="p-6 sm:p-8">

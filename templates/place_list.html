@@ -93,9 +93,26 @@
   <a href="{% url 'place_detail' place.pk %}"
     class="place-card group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col"
     data-name="{{ place.name|lower }}" data-desc="{{ place.description|lower }}">
-    <div class="h-48 bg-gray-100 overflow-hidden relative">
-      <!-- แสดงไอคอนริบบิ้นเฉพาะเมื่อบันทึกไว้แล้ว (ไม่รกสายตา) -->
-      {% if place.pk in user_bookmarked_place_ids %}
+    <div class="relative w-full h-48 bg-[#f4f5f7] flex items-center justify-center overflow-hidden">
+      {% if place.image %}
+        <img src="{{ place.image.url }}" alt="{{ place.name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
+        <span class="hidden text-4xl filter drop-shadow-sm select-none">📍</span>
+      {% elif place.image_url %}
+        <img src="{{ place.image_url }}" alt="{{ place.name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
+        <span class="hidden text-4xl filter drop-shadow-sm select-none">📍</span>
+      {% else %}
+        <!-- กรณีไม่มีรูป ให้โชว์หมุดปักสีชมพูตรงกลางเหมือนเดิม -->
+        <span class="text-4xl filter drop-shadow-sm select-none">📍</span>
+      {% endif %}
+
+      <!-- ป้ายคะแนนดาวมุมขวาบน (คงไว้เหมือนเดิม) -->
+      <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-gray-700 shadow-sm flex items-center gap-1">
+        <span class="text-amber-500">★</span>
+        <span>{{ place.average_rating|default:"0.0" }}</span>
+      </div>
+
+      <!-- ปุ่มบุ๊กมาร์กมุมซ้ายบน -->
+      {% if user.is_authenticated and place.pk in user_bookmarked_place_ids %}
       <div
         class="absolute top-3 left-3 bg-amber-500/90 text-white p-1.5 rounded-lg shadow-sm backdrop-blur-sm z-10 flex items-center justify-center"
         title="บันทึกไว้แล้ว">
@@ -103,23 +120,11 @@
           <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
       </div>
-      {% endif %} {% if place.image and place.image.url %}
-      <img src="{{ place.image.url }}" alt="{{ place.name }}"
-        class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
-      {% else %}
-      <div class="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100 text-4xl">
-        📍
-      </div>
       {% endif %}
-      <span
-        class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-semibold text-amber-700 shadow-sm">
-        ★ {{ place.average_rating }}
-      </span>
     </div>
     <div class="p-5 flex-grow flex flex-col justify-between">
       <div>
-        <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">{{ place.get_category_display
-          }}</span>
+        <span class="text-xs font-semibold text-amber-600 tracking-wide">{{ place.get_category_display }}</span>
         <h2 class="text-lg font-bold text-gray-900 mt-1 group-hover:text-amber-600 transition">
           {{ place.name }}
         </h2>
@@ -329,8 +334,9 @@
     if (!mapInitialized) {
       initLeafletMap();
       mapInitialized = true;
+      setTimeout(() => { if (map) map.invalidateSize(); }, 200);
     } else {
-      setTimeout(() => { map.invalidateSize(); }, 200);
+      setTimeout(() => { if (map) map.invalidateSize(); }, 200);
     }
   });
 
