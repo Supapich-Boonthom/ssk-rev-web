@@ -225,6 +225,16 @@
           </div>
         </div>
         <p class="text-gray-700 text-sm mt-3">{{ review.comment }}</p>
+        <!-- แสดงแท็กของรีวิว -->
+        {% if review.tags.all %}
+        <div class="flex flex-wrap gap-1.5 mt-2">
+          {% for tag in review.tags.all %}
+          <a href="{% url 'place_list' %}?tag={{ tag.name }}" class="text-[11px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md hover:underline font-medium">
+            #{{ tag.name }}
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
         {% if review.image %}
         <div class="mt-3">
           <img

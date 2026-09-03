@@ -16,6 +16,7 @@ from .models import (
     ReviewReport,
     Bookmark,
     Notification,
+    Tag,
 )
 from .forms import RegisterForm, ReviewForm, PlaceForm, ProfileUpdateForm
 
@@ -26,6 +27,7 @@ def place_list(request):
     tab = request.GET.get("tab", "places")
     feed_filter = request.GET.get("sort", "trending")
     selected_filter = request.GET.get("filter", "")
+    selected_tag = request.GET.get("tag", "")
 
     places = Place.objects.filter(is_approved=True).prefetch_related("reviews")
     if selected_filter == "saved" and request.user.is_authenticated:
@@ -39,6 +41,13 @@ def place_list(request):
             | Q(address__icontains=query)
             | Q(description__icontains=query)
         )
+
+    # กรองสถานที่ตามแท็กของรีวิว
+    if selected_tag:
+        places = places.filter(reviews__tags__name=selected_tag).distinct()
+
+    # ดึงแท็กทั้งหมดสำหรับแสดงปุ่มกรอง
+    all_tags = Tag.objects.all()
 
     # กรองรีวิวเฉพาะของสถานที่ที่อนุมัติแล้วเท่านั้น
     reviews_qs = Review.objects.filter(place__is_approved=True).select_related(
@@ -84,6 +93,8 @@ def place_list(request):
             "current_tab": tab,
             "feed_filter": feed_filter,
             "selected_filter": selected_filter,
+            "all_tags": all_tags,
+            "selected_tag": selected_tag,
         },
     )
 

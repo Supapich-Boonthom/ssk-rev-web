@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Place, Review, ReviewLike, ReviewReport, Profile, Notification
+from .models import Place, Review, ReviewLike, ReviewReport, Profile, Notification, Tag
 
 
 @admin.action(description="อนุมัติสถานที่ที่เลือก")
@@ -15,11 +15,18 @@ class PlaceAdmin(admin.ModelAdmin):
     actions = [approve_places]
 
 
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ("name",)
+    search_fields = ("name",)
+
+
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ("place", "user", "rating", "created_at")
     list_filter = ("rating", "created_at")
     search_fields = ("place__name", "user__username", "comment")
+    filter_horizontal = ("tags",)
 
 
 @admin.register(ReviewReport)
