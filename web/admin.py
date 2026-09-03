@@ -1,5 +1,14 @@
 from django.contrib import admin
-from .models import Place, Review, ReviewLike, ReviewReport, Profile, Notification, Tag
+from .models import (
+    Place,
+    Review,
+    ReviewImage,
+    ReviewLike,
+    ReviewReport,
+    Profile,
+    Notification,
+    Tag,
+)
 
 
 @admin.action(description="อนุมัติสถานที่ที่เลือก")
@@ -21,12 +30,24 @@ class TagAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
 
+class ReviewImageInline(admin.TabularInline):
+    model = ReviewImage
+    extra = 1
+
+
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ("place", "user", "rating", "created_at")
     list_filter = ("rating", "created_at")
     search_fields = ("place__name", "user__username", "comment")
     filter_horizontal = ("tags",)
+    inlines = [ReviewImageInline]
+
+
+@admin.register(ReviewImage)
+class ReviewImageAdmin(admin.ModelAdmin):
+    list_display = ("review", "image", "created_at")
+    list_filter = ("created_at",)
 
 
 @admin.register(ReviewReport)

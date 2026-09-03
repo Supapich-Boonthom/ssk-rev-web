@@ -11,6 +11,7 @@ from django.db.models import Q, Count
 from .models import (
     Place,
     Review,
+    ReviewImage,
     ReviewLike,
     CATEGORY_CHOICES,
     ReviewReport,
@@ -18,7 +19,14 @@ from .models import (
     Notification,
     Tag,
 )
-from .forms import RegisterForm, ReviewForm, PlaceForm, ProfileUpdateForm
+from .forms import (
+    RegisterForm,
+    ReviewForm,
+    PlaceForm,
+    ProfileUpdateForm,
+    QuickReviewForm,
+)
+from .moderation import mask_profanity
 
 
 def place_list(request):
@@ -56,8 +64,10 @@ def place_list(request):
     # ดึงข้อมูลรีวิวเฉพาะเมื่อเปิดแท็บฟีด (feed) เพื่อประหยัด Query และเวลาโหลด
     recent_reviews = []
     if tab == "feed":
-        reviews_qs = Review.objects.filter(place__is_approved=True).select_related(
-            "place", "user__profile"
+        reviews_qs = (
+            Review.objects.filter(place__is_approved=True)
+            .select_related("place", "user__profile")
+            .prefetch_related("images")
         )
         if feed_filter == "latest":
             recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
@@ -112,7 +122,7 @@ def place_detail(request, pk):
     reviews = (
         place.reviews.annotate(likes_count=Count("likes"))
         .select_related("user__profile")
-        .prefetch_related("tags")
+        .prefetch_related("tags", "images")
         .order_by("-likes_count", "-created_at")
     )
     form = ReviewForm()
@@ -136,6 +146,16 @@ def place_detail(request, pk):
             review.place = place
             review.user = request.user
             review.save()
+
+            # ดึงไฟล์ทั้งหมดที่ผู้ใช้เลือกพร้อมกัน
+            images = request.FILES.getlist("upload_images")
+            for img in images:
+                ReviewImage.objects.create(review=review, image=img)
+
+            # เผื่อกรณีเลือกไฟล์เดียวผ่าน name="image" ด้วย
+            if "image" in request.FILES and not images:
+                ReviewImage.objects.create(review=review, image=request.FILES["image"])
+
             messages.success(request, "บันทึกรีวิวของคุณเรียบร้อยแล้ว!")
             return redirect("place_detail", pk=pk)
 
@@ -348,3 +368,101 @@ def read_notification(request, pk):
 def mark_all_notifications_read(request):
     request.user.notifications.filter(is_read=False).update(is_read=True)
     return redirect(request.META.get("HTTP_REFERER", "place_list"))
+
+
+@login_required(login_url="login")
+def quick_review(request):
+    places = Place.objects.filter(is_approved=True).order_by("name")
+
+    if request.method == "POST":
+        place_name = request.POST.get("place_name", "").strip()
+        rating = request.POST.get("rating", "5")
+        comment = request.POST.get("comment", "").strip()
+
+        if not place_name:
+            messages.error(request, "กรุณาระบุชื่อสถานที่ที่ต้องการรีวิว")
+            return render(
+                request,
+                "quick_review.html",
+                {
+                    "approved_places": places,
+                    "places": places,
+                    "rating": rating,
+                    "comment": comment,
+                },
+            )
+
+        if not comment:
+            messages.error(request, "กรุณากรอกความคิดเห็นหรือความประทับใจ")
+            return render(
+                request,
+                "quick_review.html",
+                {
+                    "approved_places": places,
+                    "places": places,
+                    "place_name": place_name,
+                    "rating": rating,
+                },
+            )
+
+        # ค้นหาว่ามีชื่อนี้อยู่แล้วไหม ถ้ายังไม่มีให้สร้างขึ้นมาใหม่โดยอัตโนมัติ (is_approved=False)
+        place, created = Place.objects.get_or_create(
+            name=place_name,
+            defaults={
+                "is_approved": False,
+                "category": "other",
+                "description": "สถานที่เพิ่มโดยผู้ใช้ผ่านรีวิวด่วน (รอการตรวจสอบ)",
+                "created_by": request.user,
+            },
+        )
+
+        comment = mask_profanity(comment)
+        try:
+            rating_val = int(rating)
+            if rating_val < 1 or rating_val > 5:
+                rating_val = 5
+        except (ValueError, TypeError):
+            rating_val = 5
+
+        # บันทึกรีวิวโดยผูกกับ place ตัวนี้ทันที
+        review = Review.objects.create(
+            place=place,
+            user=request.user,
+            rating=rating_val,
+            comment=comment,
+        )
+
+        # บันทึกรูปภาพหลายรูป (ReviewImage)
+        images = request.FILES.getlist("upload_images")
+        for img in images:
+            ReviewImage.objects.create(review=review, image=img)
+        if "image" in request.FILES and not images:
+            ReviewImage.objects.create(review=review, image=request.FILES["image"])
+
+        if created:
+            messages.success(
+                request,
+                f"บันทึกรีวิวและเสนอสถานที่ใหม่ '{place.name}' เรียบร้อยแล้ว (รอการตรวจสอบจากผู้ดูแลระบบ)",
+            )
+        else:
+            messages.success(request, f"บันทึกรีวิวสถานที่ '{place.name}' เรียบร้อยแล้ว!")
+
+        return redirect("place_detail", pk=place.pk)
+
+    # GET request
+    selected_place_name = ""
+    place_id = request.GET.get("place_id")
+    if place_id:
+        p = Place.objects.filter(pk=place_id).first()
+        if p:
+            selected_place_name = p.name
+
+    return render(
+        request,
+        "quick_review.html",
+        {
+            "approved_places": places,
+            "places": places,
+            "place_name": selected_place_name,
+        },
+    )

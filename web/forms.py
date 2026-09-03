@@ -122,3 +122,38 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['avatar', 'bio']
+
+
+class QuickReviewForm(forms.ModelForm):
+    place = forms.ModelChoiceField(
+        queryset=Place.objects.filter(is_approved=True).order_by("name"),
+        empty_label="-- เลือกสถานที่ที่ต้องการรีวิว --",
+        widget=forms.Select(
+            attrs={
+                "class": "w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-400 focus:outline-none text-sm bg-white"
+            }
+        ),
+    )
+
+    class Meta:
+        model = Review
+        fields = ["place", "rating", "comment"]
+        widgets = {
+            "rating": forms.Select(
+                choices=[(i, f"{i} ดาว") for i in range(5, 0, -1)],
+                attrs={
+                    "class": "w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-400 focus:outline-none text-sm bg-white"
+                },
+            ),
+            "comment": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "placeholder": "แชร์ความประทับใจ หรือข้อแนะนำสั้นๆ...",
+                    "class": "w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-400 focus:outline-none text-sm",
+                }
+            ),
+        }
+
+    def clean_comment(self):
+        comment = self.cleaned_data.get("comment", "")
+        return mask_profanity(comment)

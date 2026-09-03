@@ -150,6 +150,26 @@ class Review(models.Model):
         super().save(*args, **kwargs)
 
 
+class ReviewImage(models.Model):
+    review = models.ForeignKey(
+        Review, related_name="images", on_delete=models.CASCADE, verbose_name="รีวิว"
+    )
+    image = models.ImageField(upload_to="reviews/", verbose_name="รูปภาพประกอบ")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "รูปภาพรีวิว"
+        verbose_name_plural = "รูปภาพรีวิวทั้งหมด"
+
+    def __str__(self):
+        return f"Image for {self.review.place.name} by {self.review.user.username}"
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            self.image = optimize_image(self.image)
+        super().save(*args, **kwargs)
+
+
 class ReviewLike(models.Model):
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name="likes", verbose_name="รีวิว"
