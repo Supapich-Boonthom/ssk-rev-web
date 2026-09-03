@@ -59,6 +59,16 @@ class Place(models.Model):
         return []
 
     @property
+    def image_url(self):
+        """คืนค่า URL รูปภาพอย่างปลอดภัย หรือ None หากไม่มีรูปภาพ"""
+        if self.image:
+            try:
+                return self.image.url
+            except Exception:
+                return None
+        return None
+
+    @property
     def average_rating(self):
         # ตรวจสอบว่าถูกดึงผ่าน prefetch_related แล้วหรือไม่เพื่อป้องกัน N+1
         if hasattr(self, "_prefetched_objects_cache") and "reviews" in self._prefetched_objects_cache:
