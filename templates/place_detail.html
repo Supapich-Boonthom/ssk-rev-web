@@ -8,35 +8,30 @@
     ← กลับหน้ารวมสถานที่
   </a>
 
+  <!-- กล่องรูปภาพด้านบนของหน้ารายละเอียด -->
+  <div class="relative w-full h-72 md:h-96 bg-[#f4f5f7] rounded-3xl overflow-hidden flex items-center justify-center mb-6 shadow-sm border border-gray-100">
+    {% if place.image %}
+      <img src="{{ place.image.url }}" alt="{{ place.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
+      <div class="hidden flex-col items-center justify-center select-none">
+        <span class="text-6xl filter drop-shadow-sm">📍</span>
+      </div>
+    {% elif place.image_url %}
+      <img src="{{ place.image_url }}" alt="{{ place.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
+      <div class="hidden flex-col items-center justify-center select-none">
+        <span class="text-6xl filter drop-shadow-sm">📍</span>
+      </div>
+    {% else %}
+      <!-- แสดงหมุดสีชมพูอยู่ตรงกลางเมื่อไม่มีรูป -->
+      <div class="flex flex-col items-center justify-center select-none">
+        <span class="text-6xl filter drop-shadow-sm">📍</span>
+      </div>
+    {% endif %}
+  </div>
+
   <!-- Place Header Card -->
   <div
     class="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm"
   >
-    {% if place.image and place.image.url %}
-    <div class="h-72 sm:h-96 w-full overflow-hidden relative bg-amber-50">
-      <img
-        src="{{ place.image.url }}"
-        alt="{{ place.name }}"
-        class="w-full h-full object-cover"
-        onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
-      />
-      <div class="w-full h-full hidden items-center justify-center text-amber-500 text-6xl">
-        🏞️
-      </div>
-    </div>
-    {% elif place.image_url %}
-    <div class="h-72 sm:h-96 w-full overflow-hidden relative bg-amber-50">
-      <img
-        src="{{ place.image_url }}"
-        alt="{{ place.name }}"
-        class="w-full h-full object-cover"
-        onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
-      />
-      <div class="w-full h-full hidden items-center justify-center text-amber-500 text-6xl">
-        🏞️
-      </div>
-    </div>
-    {% endif %}
     <div class="p-6 sm:p-8">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
