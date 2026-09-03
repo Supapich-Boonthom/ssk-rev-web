@@ -1,6 +1,9 @@
 {% extends 'base.html' %} {% block content %}
 <!-- Leaflet CSS & JS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- Hero & Header Section -->
 <div class="text-center py-6">
@@ -13,12 +16,16 @@
 
   <!-- Navigation Tabs -->
   <div class="flex justify-center gap-3 mt-6">
-    <a href="?tab=places{% if query %}&q={{ query }}{% endif %}"
-      class="px-5 py-2.5 rounded-2xl text-sm font-semibold transition flex items-center gap-2 {% if current_tab == 'places' %}bg-amber-600 text-white shadow-sm{% else %}bg-white text-gray-600 border border-gray-200 hover:bg-gray-50{% endif %}">
+    <a
+      href="?tab=places{% if query %}&q={{ query }}{% endif %}"
+      class="px-5 py-2.5 rounded-2xl text-sm font-semibold transition flex items-center gap-2 {% if current_tab == 'places' %}bg-amber-600 text-white shadow-sm{% else %}bg-white text-gray-600 border border-gray-200 hover:bg-gray-50{% endif %}"
+    >
       📍 สำรวจสถานที่
     </a>
-    <a href="?tab=feed"
-      class="px-5 py-2.5 rounded-2xl text-sm font-semibold transition flex items-center gap-2 {% if current_tab == 'feed' %}bg-amber-600 text-white shadow-sm{% else %}bg-white text-gray-600 border border-gray-200 hover:bg-gray-50{% endif %}">
+    <a
+      href="?tab=feed"
+      class="px-5 py-2.5 rounded-2xl text-sm font-semibold transition flex items-center gap-2 {% if current_tab == 'feed' %}bg-amber-600 text-white shadow-sm{% else %}bg-white text-gray-600 border border-gray-200 hover:bg-gray-50{% endif %}"
+    >
       💬 ฟีดรีวิวสด
     </a>
   </div>
@@ -30,26 +37,40 @@
 <div class="max-w-xl mx-auto mb-8">
   <form method="GET" action="{% url 'place_list' %}" class="flex gap-2">
     <input type="hidden" name="tab" value="places" />
-    <input type="text" name="q" id="search-input" value="{{ query }}" placeholder="ค้นหาชื่อสถานที่ หรือที่อยู่..."
-      class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white" />
-    <button type="submit"
-      class="bg-amber-600 hover:bg-amber-700 text-white font-medium px-6 py-3 rounded-xl transition shrink-0">
+    <input
+      type="text"
+      name="q"
+      id="search-input"
+      value="{{ query }}"
+      placeholder="ค้นหาชื่อสถานที่ หรือที่อยู่..."
+      class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+    />
+    <button
+      type="submit"
+      class="bg-amber-600 hover:bg-amber-700 text-white font-medium px-6 py-3 rounded-xl transition shrink-0"
+    >
       ค้นหา
     </button>
   </form>
 
   <div class="flex flex-wrap justify-center gap-2 mt-4">
-    <a href="?tab=places"
-      class="px-4 py-1.5 rounded-full text-xs font-medium {% if not selected_category and not selected_filter %}bg-gray-900 text-white{% else %}bg-white text-gray-600 border border-gray-200 hover:border-gray-400{% endif %}">ทั้งหมด</a>
+    <a
+      href="?tab=places"
+      class="px-4 py-1.5 rounded-full text-xs font-medium {% if not selected_category and not selected_filter %}bg-gray-900 text-white{% else %}bg-white text-gray-600 border border-gray-200 hover:border-gray-400{% endif %}"
+      >ทั้งหมด</a
+    >
     {% if user.is_authenticated %}
-    <a href="?tab=places&filter=saved"
-      class="px-4 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition {% if selected_filter == 'saved' %}bg-amber-600 text-white{% else %}bg-white text-gray-600 border border-gray-200 hover:border-gray-400{% endif %}">
+    <a
+      href="?tab=places&filter=saved"
+      class="px-4 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition {% if selected_filter == 'saved' %}bg-amber-600 text-white{% else %}bg-white text-gray-600 border border-gray-200 hover:border-gray-400{% endif %}"
+    >
       <span>🔖</span> ที่บันทึกไว้
     </a>
-    {% endif %}
-    {% for cat_key, cat_name in categories %}
-    <a href="?tab=places&category={{ cat_key }}{% if query %}&q={{ query }}{% endif %}"
-      class="px-4 py-1.5 rounded-full text-xs font-medium {% if selected_category == cat_key %}bg-amber-600 text-white{% else %}bg-white text-gray-600 border border-gray-200 hover:border-gray-400{% endif %}">
+    {% endif %} {% for cat_key, cat_name in categories %}
+    <a
+      href="?tab=places&category={{ cat_key }}{% if query %}&q={{ query }}{% endif %}"
+      class="px-4 py-1.5 rounded-full text-xs font-medium {% if selected_category == cat_key %}bg-amber-600 text-white{% else %}bg-white text-gray-600 border border-gray-200 hover:border-gray-400{% endif %}"
+    >
       {{ cat_name }}
     </a>
     {% endfor %}
@@ -60,8 +81,10 @@
 {% if all_tags %}
 <div class="flex flex-wrap gap-2 justify-center max-w-xl mx-auto mb-6">
   {% for tag in all_tags %}
-  <a href="?tab=places&tag={{ tag.name }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}"
-    class="px-3 py-1 rounded-full text-xs font-medium transition border {% if selected_tag == tag.name %}bg-amber-500 text-white border-amber-500 shadow-sm{% else %}bg-white text-gray-600 border-amber-200 hover:bg-amber-50{% endif %}">
+  <a
+    href="?tab=places&tag={{ tag.name }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}"
+    class="px-3 py-1 rounded-full text-xs font-medium transition border {% if selected_tag == tag.name %}bg-amber-500 text-white border-amber-500 shadow-sm{% else %}bg-white text-gray-600 border-amber-200 hover:bg-amber-50{% endif %}"
+  >
     #{{ tag.name }}
   </a>
   {% endfor %}
@@ -71,12 +94,16 @@
 <!-- แถบปุ่มสลับมุมมอง -->
 <div class="flex justify-end max-w-6xl mx-auto px-4 mb-4">
   <div class="inline-flex bg-gray-100 p-1 rounded-xl shadow-inner gap-1">
-    <button id="view-cards-btn"
-      class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-800 shadow-sm transition">
+    <button
+      id="view-cards-btn"
+      class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-800 shadow-sm transition"
+    >
       <span>📋</span> รายการ
     </button>
-    <button id="view-map-btn"
-      class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:text-gray-800 transition">
+    <button
+      id="view-map-btn"
+      class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:text-gray-800 transition"
+    >
       <span>🗺️</span> แผนที่
     </button>
   </div>
@@ -84,29 +111,60 @@
 
 <!-- ส่วนแสดงผลแผนที่ (ซ่อนไว้เป็นค่าเริ่มต้น) -->
 <div id="map-wrapper" class="hidden max-w-6xl mx-auto px-4 mb-8">
-  <div id="map" class="w-full h-96 sm:h-[480px] rounded-3xl shadow-sm border border-amber-100 z-0"></div>
+  <div
+    id="map"
+    class="w-full h-96 sm:h-[480px] rounded-3xl shadow-sm border border-amber-100 z-0"
+  ></div>
 </div>
 
 <!-- Places Grid -->
-<div id="places-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+<div
+  id="places-container"
+  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+>
   {% for place in places %}
-  <a href="{% url 'place_detail' place.pk %}"
+  <a
+    href="{% url 'place_detail' place.pk %}"
     class="place-card group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col"
-    data-name="{{ place.name|lower }}" data-desc="{{ place.description|lower }}">
-    <div class="relative w-full h-48 bg-[#f4f5f7] flex items-center justify-center overflow-hidden">
+    data-name="{{ place.name|lower }}"
+    data-desc="{{ place.description|lower }}"
+  >
+    <div
+      class="relative w-full h-48 bg-[#f4f5f7] flex items-center justify-center overflow-hidden"
+    >
       {% if place.image %}
-        <img src="{{ place.image.url }}" alt="{{ place.name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
-        <span class="hidden text-4xl filter drop-shadow-sm select-none">📍</span>
+      <img
+        src="{{ place.image.url }}"
+        alt="{{ place.name }}"
+        class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+        onerror="
+          this.style.display = 'none';
+          if (this.nextElementSibling)
+            this.nextElementSibling.classList.remove('hidden');
+        "
+      />
+      <span class="hidden text-4xl filter drop-shadow-sm select-none">📍</span>
       {% elif place.image_url %}
-        <img src="{{ place.image_url }}" alt="{{ place.name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
-        <span class="hidden text-4xl filter drop-shadow-sm select-none">📍</span>
+      <img
+        src="{{ place.image_url }}"
+        alt="{{ place.name }}"
+        class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+        onerror="
+          this.style.display = 'none';
+          if (this.nextElementSibling)
+            this.nextElementSibling.classList.remove('hidden');
+        "
+      />
+      <span class="hidden text-4xl filter drop-shadow-sm select-none">📍</span>
       {% else %}
-        <!-- กรณีไม่มีรูป ให้โชว์หมุดปักสีชมพูตรงกลางเหมือนเดิม -->
-        <span class="text-4xl filter drop-shadow-sm select-none">📍</span>
+      <!-- กรณีไม่มีรูป ให้โชว์หมุดปักสีชมพูตรงกลางเหมือนเดิม -->
+      <span class="text-4xl filter drop-shadow-sm select-none">📍</span>
       {% endif %}
 
       <!-- ป้ายคะแนนดาวมุมขวาบน (คงไว้เหมือนเดิม) -->
-      <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-gray-700 shadow-sm flex items-center gap-1">
+      <div
+        class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-gray-700 shadow-sm flex items-center gap-1"
+      >
         <span class="text-amber-500">★</span>
         <span>{{ place.average_rating|default:"0.0" }}</span>
       </div>
@@ -115,7 +173,8 @@
       {% if user.is_authenticated and place.pk in user_bookmarked_place_ids %}
       <div
         class="absolute top-3 left-3 bg-amber-500/90 text-white p-1.5 rounded-lg shadow-sm backdrop-blur-sm z-10 flex items-center justify-center"
-        title="บันทึกไว้แล้ว">
+        title="บันทึกไว้แล้ว"
+      >
         <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
           <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
@@ -124,15 +183,21 @@
     </div>
     <div class="p-5 flex-grow flex flex-col justify-between">
       <div>
-        <span class="text-xs font-semibold text-amber-600 tracking-wide">{{ place.get_category_display }}</span>
-        <h2 class="text-lg font-bold text-gray-900 mt-1 group-hover:text-amber-600 transition">
+        <span class="text-xs font-semibold text-amber-600 tracking-wide"
+          >{{ place.get_category_display }}</span
+        >
+        <h2
+          class="text-lg font-bold text-gray-900 mt-1 group-hover:text-amber-600 transition"
+        >
           {{ place.name }}
         </h2>
         <!-- แสดงแท็กไฮไลต์ (ใต้ชื่อสถานที่) -->
         {% if place.get_tag_list %}
         <div class="flex flex-wrap gap-1 mt-2">
           {% for tag in place.get_tag_list %}
-          <span class="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-md font-medium">
+          <span
+            class="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-md font-medium"
+          >
             #{{ tag }}
           </span>
           {% endfor %}
@@ -142,7 +207,9 @@
           {{ place.description }}
         </p>
       </div>
-      <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400">
+      <div
+        class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400"
+      >
         <span>📍 {{ place.address|default:"ศรีสะเกษ" }}</span>
         <span>{{ place.reviews.count }} รีวิว</span>
       </div>
@@ -150,7 +217,9 @@
   </a>
   {% empty %}
   <!-- ส่วนแสดงผลเมื่อค้นหาไม่พบ หรือยังไม่มีสถานที่ -->
-  <div class="col-span-full text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200 p-8 my-4">
+  <div
+    class="col-span-full text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200 p-8 my-4"
+  >
     <div class="text-4xl mb-3">🔍</div>
     {% if query %}
     <h3 class="text-base font-bold text-gray-800">
@@ -161,16 +230,20 @@
       ลองตรวจสอบคำค้นหาอีกครั้ง
     </p>
     <div class="mt-5">
-      <a href="{% url 'add_place' %}"
-        class="inline-flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-sm">
+      <a
+        href="{% url 'add_place' %}"
+        class="inline-flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-sm"
+      >
         ➕ เสนอเพิ่ม "{{ query }}" เข้าระบบ
       </a>
     </div>
     {% else %}
     <p class="text-gray-400 text-sm">ยังไม่มีข้อมูลสถานที่ในหมวดหมู่นี้</p>
     <div class="mt-4">
-      <a href="{% url 'add_place' %}"
-        class="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold px-4 py-2 rounded-xl transition">
+      <a
+        href="{% url 'add_place' %}"
+        class="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold px-4 py-2 rounded-xl transition"
+      >
         ➕ เพิ่มสถานที่แรกเลย
       </a>
     </div>
@@ -182,14 +255,19 @@
 <!-- กล่องแจ้งเตือนเมื่อค้นหาแบบ real-time ไม่พบผลลัพธ์ -->
 <div id="no-results" class="hidden text-center py-12">
   <div class="text-3xl mb-2">🔍</div>
-  <p class="text-xs font-semibold text-gray-500">ไม่พบสถานที่ที่ตรงกับคำค้นหา</p>
+  <p class="text-xs font-semibold text-gray-500">
+    ไม่พบสถานที่ที่ตรงกับคำค้นหา
+  </p>
   <p class="text-[11px] text-gray-400 mt-0.5">ลองพิมพ์คำค้นหาอื่นดูนะ</p>
 </div>
 
 <!-- ข้อความแนะนำขนาดเล็กด้านล่างสุด -->
 <div class="text-center mt-12 mb-6 text-xs text-gray-400">
   หาสถานที่ที่ต้องการไม่เจอใช่ไหม?
-  <a href="{% url 'add_place' %}" class="text-amber-600 font-semibold hover:underline ml-1">
+  <a
+    href="{% url 'add_place' %}"
+    class="text-amber-600 font-semibold hover:underline ml-1"
+  >
     + เสนอสถานที่ใหม่ที่นี่
   </a>
 </div>
@@ -198,16 +276,22 @@
 {% else %}
 <!-- Sub-filter สำหรับฟีด (ปุ่มสลับ มาแรง / ล่าสุด / ยอดนิยม) -->
 <div class="flex justify-center gap-2 mb-6">
-  <a href="?tab=feed&sort=trending"
-    class="px-4 py-1.5 rounded-full text-xs font-semibold transition {% if feed_filter == 'trending' %}bg-amber-600 text-white shadow-sm{% else %}bg-white text-gray-600 border border-gray-200 hover:bg-gray-50{% endif %}">
+  <a
+    href="?tab=feed&sort=trending"
+    class="px-4 py-1.5 rounded-full text-xs font-semibold transition {% if feed_filter == 'trending' %}bg-amber-600 text-white shadow-sm{% else %}bg-white text-gray-600 border border-gray-200 hover:bg-gray-50{% endif %}"
+  >
     🔥 มาแรงสัปดาห์นี้
   </a>
-  <a href="?tab=feed&sort=latest"
-    class="px-4 py-1.5 rounded-full text-xs font-semibold transition {% if feed_filter == 'latest' %}bg-amber-600 text-white shadow-sm{% else %}bg-white text-gray-600 border border-gray-200 hover:bg-gray-50{% endif %}">
+  <a
+    href="?tab=feed&sort=latest"
+    class="px-4 py-1.5 rounded-full text-xs font-semibold transition {% if feed_filter == 'latest' %}bg-amber-600 text-white shadow-sm{% else %}bg-white text-gray-600 border border-gray-200 hover:bg-gray-50{% endif %}"
+  >
     🕒 ล่าสุด
   </a>
-  <a href="?tab=feed&sort=top"
-    class="px-4 py-1.5 rounded-full text-xs font-semibold transition {% if feed_filter == 'top' %}bg-amber-600 text-white shadow-sm{% else %}bg-white text-gray-600 border border-gray-200 hover:bg-gray-50{% endif %}">
+  <a
+    href="?tab=feed&sort=top"
+    class="px-4 py-1.5 rounded-full text-xs font-semibold transition {% if feed_filter == 'top' %}bg-amber-600 text-white shadow-sm{% else %}bg-white text-gray-600 border border-gray-200 hover:bg-gray-50{% endif %}"
+  >
     🏆 ยอดนิยมตลอดกาล
   </a>
 </div>
@@ -219,52 +303,81 @@
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <a href="{% url 'user_profile' review.user.username %}">
-          <img src="{{ review.user.profile.avatar_url }}"
-            class="w-10 h-10 rounded-full object-cover border border-amber-100 shadow-sm hover:opacity-80 transition">
+          <img
+            src="{{ review.user.profile.avatar_url }}"
+            class="w-10 h-10 rounded-full object-cover border border-amber-100 shadow-sm hover:opacity-80 transition"
+          />
         </a>
         <div>
-          <h3 class="font-bold text-gray-900 text-sm hover:text-amber-600 transition">
-            <a href="{% url 'user_profile' review.user.username %}">{{ review.user.username }}</a>
+          <h3
+            class="font-bold text-gray-900 text-sm hover:text-amber-600 transition"
+          >
+            <a href="{% url 'user_profile' review.user.username %}"
+              >{{ review.user.username }}</a
+            >
           </h3>
-          <span class="text-xs text-gray-400">{{ review.created_at|date:"d M Y เวลา H:i น." }}</span>
+          <span class="text-xs text-gray-400"
+            >{{ review.created_at|date:"d M Y เวลา H:i น." }}</span
+          >
         </div>
       </div>
-      <span class="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-xs font-bold">
+      <span
+        class="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-xs font-bold"
+      >
         ⭐ {{ review.rating }}/5 ดาว
       </span>
     </div>
 
     <!-- Checked-in Tag -->
     <div class="mt-3">
-      <a href="{% url 'place_detail' review.place.pk %}"
-        class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 bg-amber-50/70 hover:bg-amber-100 px-3 py-1.5 rounded-xl transition">
+      <a
+        href="{% url 'place_detail' review.place.pk %}"
+        class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 bg-amber-50/70 hover:bg-amber-100 px-3 py-1.5 rounded-xl transition"
+      >
         📍 เช็คอินที่:
         <strong class="text-gray-900">{{ review.place.name }}</strong>
       </a>
     </div>
 
     <!-- Review Comment -->
-    <p class="mt-3 text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-line">
+    <p
+      class="mt-3 text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-line"
+    >
       {{ review.comment }}
     </p>
 
     <!-- Review Photo -->
     {% if review.image and review.image.url %}
-    <div class="mt-4 rounded-2xl overflow-hidden border border-gray-100 max-h-96">
-      <img src="{{ review.image.url }}" alt="รูปประกอบรีวิว" class="w-full h-full object-cover" />
+    <div
+      class="mt-4 rounded-2xl overflow-hidden border border-gray-100 max-h-96"
+    >
+      <img
+        src="{{ review.image.url }}"
+        alt="รูปประกอบรีวิว"
+        class="w-full h-full object-cover"
+      />
     </div>
     {% endif %}
 
     <!-- Footer & Like Button -->
-    <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-      <a href="{% url 'toggle_like' review.id %}"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition {% if review.id in user_liked_review_ids %}bg-red-50 text-red-600 border-red-200 font-semibold{% else %}bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100{% endif %}">
+    <div
+      class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs"
+    >
+      <a
+        href="{% url 'toggle_like' review.id %}"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition {% if review.id in user_liked_review_ids %}bg-red-50 text-red-600 border-red-200 font-semibold{% else %}bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100{% endif %}"
+      >
         {% if review.id in user_liked_review_ids %}❤️ มีประโยชน์{% else %}🤍
         มีประโยชน์{% endif %}
-        <span class="ml-1 text-gray-500 font-bold">({{ review.likes_count|default:review.likes.count }})</span>
+        <span class="ml-1 text-gray-500 font-bold"
+          >({{ review.likes_count|default:review.likes.count }})</span
+        >
       </a>
 
-      <a href="{% url 'place_detail' review.place.pk %}" class="text-amber-600 font-semibold hover:underline">
+      <a
+        href="{% url 'place_detail' review.place.pk %}"
+        class="text-amber-600 font-semibold hover:underline"
+      >
         ดูสถานที่นี้ →
       </a>
     </div>
@@ -416,33 +529,33 @@
 
 <script>
   // === Real-time Client-side Search Filter ===
-  document.addEventListener('DOMContentLoaded', () => {
-    const searchInput = document.getElementById('search-input');
-    const cards = document.querySelectorAll('.place-card');
-    const noResults = document.getElementById('no-results');
+  document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById("search-input");
+    const cards = document.querySelectorAll(".place-card");
+    const noResults = document.getElementById("no-results");
 
     if (!searchInput) return;
 
-    searchInput.addEventListener('input', function (e) {
+    searchInput.addEventListener("input", function (e) {
       const keyword = e.target.value.trim().toLowerCase();
       let matchCount = 0;
 
-      cards.forEach(card => {
-        const name = card.getAttribute('data-name') || '';
-        const desc = card.getAttribute('data-desc') || '';
+      cards.forEach((card) => {
+        const name = card.getAttribute("data-name") || "";
+        const desc = card.getAttribute("data-desc") || "";
 
         if (name.includes(keyword) || desc.includes(keyword)) {
-          card.style.display = '';
+          card.style.display = "";
           matchCount++;
         } else {
-          card.style.display = 'none';
+          card.style.display = "none";
         }
       });
 
-      if (matchCount === 0 && keyword !== '') {
-        noResults.classList.remove('hidden');
+      if (matchCount === 0 && keyword !== "") {
+        noResults.classList.remove("hidden");
       } else {
-        noResults.classList.add('hidden');
+        noResults.classList.add("hidden");
       }
     });
   });
