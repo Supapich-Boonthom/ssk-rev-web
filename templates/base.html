@@ -102,6 +102,10 @@
                   <p class="text-xs font-bold text-gray-800 truncate">{{ user.username }}</p>
                 </div>
             
+                <a href="{% url 'place_list' %}" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition">
+                  <span>🏠</span> หน้าแรก
+                </a>
+
                 <a href="{% url 'profile' %}" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition">
                   <span>👤</span> หน้าโปรไฟล์ของฉัน
                 </a>
