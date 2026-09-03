@@ -99,6 +99,17 @@ class Bookmark(models.Model):
         return f"{self.user.username} saved {self.place.name}"
 
 
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    class Meta:
+        verbose_name = "แท็กรีวิว"
+        verbose_name_plural = "แท็กรีวิวทั้งหมด"
+
+    def __str__(self):
+        return f"#{self.name}"
+
+
 class Review(models.Model):
     place = models.ForeignKey(
         Place, on_delete=models.CASCADE, related_name="reviews", verbose_name="สถานที่"
@@ -112,6 +123,7 @@ class Review(models.Model):
     image = models.ImageField(
         upload_to="reviews/", blank=True, null=True, verbose_name="รูปภาพประกอบ"
     )
+    tags = models.ManyToManyField(Tag, blank=True, related_name="reviews", verbose_name="แท็กรีวิว")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
