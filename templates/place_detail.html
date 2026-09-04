@@ -1,12 +1,13 @@
 {% extends 'base.html' %} {% block content %}
 <div class="max-w-4xl mx-auto">
-  <!-- Breadcrumb -->
-  <a
-    href="{% url 'place_list' %}"
-    class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-amber-600 mb-6"
+  <!-- Breadcrumb Back Button -->
+  <button 
+    type="button" 
+    onclick="history.back()" 
+    class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-amber-600 transition mb-4 cursor-pointer"
   >
     ← กลับหน้ารวมสถานที่
-  </a>
+  </button>
 
   <!-- กล่องรูปภาพด้านบนของหน้ารายละเอียด -->
   <div class="relative w-full h-72 md:h-96 bg-[#f4f5f7] rounded-3xl overflow-hidden flex items-center justify-center mb-6 shadow-sm border border-gray-100">
