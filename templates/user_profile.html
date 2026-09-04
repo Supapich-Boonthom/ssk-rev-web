@@ -10,8 +10,29 @@
       class="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-amber-100 shadow"
     >
     <div class="flex-1 text-center sm:text-left">
-      <h1 class="text-2xl font-bold text-gray-800">{{ profile_user.username }}</h1>
-      <p class="text-sm text-gray-500 mt-1 mb-4">{{ profile.bio|default:"ยังไม่มีคำแนะนำตัว" }}</p>
+      <div class="flex items-center justify-center sm:justify-start gap-2 flex-wrap mb-1">
+        <h1 class="text-2xl font-bold text-gray-800">{{ profile_user.username }}</h1>
+        {% with active_badge=profile.get_active_badge %}
+          {% if active_badge %}
+            <button 
+              type="button"
+              onclick="openBadgeModal({
+                name: '{{ active_badge.name|escapejs }}',
+                icon: '{{ active_badge.icon|escapejs }}',
+                desc: '{{ active_badge.desc|escapejs }}',
+                condition: '{{ active_badge.condition|escapejs }}',
+                color: '{{ active_badge.color|escapejs }}'
+              })"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border {{ active_badge.color }} hover:scale-105 transition cursor-pointer shadow-2xs" 
+              title="คลิกเพื่อดูรายละเอียดเหรียญตรา"
+            >
+              <span>{{ active_badge.icon }}</span>
+              <span>{{ active_badge.name }}</span>
+            </button>
+          {% endif %}
+        {% endwith %}
+      </div>
+      <p class="text-sm text-gray-500 mb-4">{{ profile.bio|default:"ยังไม่มีคำแนะนำตัว" }}</p>
       
       <!-- แถบสถิติ (Counters) -->
       <div class="flex justify-center sm:justify-start gap-6 border-t border-gray-100 pt-4">
@@ -39,12 +60,23 @@
     {% if badges %}
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         {% for badge in badges %}
-          <div class="flex items-center gap-3 p-3.5 rounded-2xl border {{ badge.color }}">
+          <div 
+            onclick="openBadgeModal({
+              name: '{{ badge.name|escapejs }}',
+              icon: '{{ badge.icon|escapejs }}',
+              desc: '{{ badge.desc|escapejs }}',
+              condition: '{{ badge.condition|escapejs }}',
+              color: '{{ badge.color|escapejs }}'
+            })"
+            class="flex items-center gap-3 p-3.5 rounded-2xl border {{ badge.color }} cursor-pointer hover:shadow-md hover:scale-[1.02] transition"
+            title="คลิกเพื่อดูรายละเอียดและเงื่อนไข"
+          >
             <span class="text-3xl">{{ badge.icon }}</span>
-            <div>
+            <div class="flex-1">
               <h4 class="font-bold text-sm">{{ badge.name }}</h4>
               <p class="text-xs opacity-80">{{ badge.desc }}</p>
             </div>
+            <span class="text-xs text-gray-400">ℹ️</span>
           </div>
         {% endfor %}
       </div>
