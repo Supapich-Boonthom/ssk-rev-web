@@ -345,5 +345,24 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
       </svg>
     </a>
+
+    <!-- ระบบจำตำแหน่ง Scroll Position อัตโนมัติ -->
+    <script>
+      // 1. จำตำแหน่ง Scroll ก่อนออกจากหน้านั้น
+      window.addEventListener('beforeunload', function () {
+        sessionStorage.setItem('scrollPos_' + window.location.pathname, window.scrollY);
+      });
+
+      // 2. เมื่อโหลดหน้าเว็บเสร็จ ตรวจสอบว่ามีตำแหน่งเดิมบันทึกไว้ไหม
+      window.addEventListener('load', function () {
+        const savedPos = sessionStorage.getItem('scrollPos_' + window.location.pathname);
+        if (savedPos !== null) {
+          window.scrollTo({
+            top: parseInt(savedPos, 10),
+            behavior: 'instant' // เลื่อนกลับตำแหน่งเดิมทันที ไม่ต้องทำอนิเมชั่นเลื่อนให้ตาลาย
+          });
+        }
+      });
+    </script>
   </body>
 </html>
