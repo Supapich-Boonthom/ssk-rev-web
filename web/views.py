@@ -12,13 +12,22 @@ from django.db.models import Q, Count
 from .models import (
     Place,
     Review,
+    ReviewImage,
     ReviewLike,
     CATEGORY_CHOICES,
     ReviewReport,
     Bookmark,
     Notification,
+    Tag,
 )
-from .forms import RegisterForm, ReviewForm, PlaceForm, ProfileUpdateForm
+from .forms import (
+    RegisterForm,
+    ReviewForm,
+    PlaceForm,
+    ProfileUpdateForm,
+    QuickReviewForm,
+)
+from .moderation import mask_profanity
 
 
 def place_list(request):
@@ -27,8 +36,13 @@ def place_list(request):
     tab = request.GET.get("tab", "places")
     feed_filter = request.GET.get("sort", "trending")
     selected_filter = request.GET.get("filter", "")
+    selected_tag = request.GET.get("tag", "")
 
-    places = Place.objects.filter(is_approved=True).prefetch_related("reviews")
+    places = (
+        Place.objects.filter(is_approved=True)
+        .annotate(reviews_count=Count("reviews"))
+        .prefetch_related("reviews")
+    )
     if selected_filter == "saved" and request.user.is_authenticated:
         places = places.filter(bookmarked_by__user=request.user)
     elif category:
@@ -41,32 +55,43 @@ def place_list(request):
             | Q(description__icontains=query)
         )
 
-    # กรองรีวิวเฉพาะของสถานที่ที่อนุมัติแล้วเท่านั้น
-    reviews_qs = Review.objects.filter(place__is_approved=True).select_related(
-        "place", "user__profile"
-    )
+    # กรองสถานที่ตามแท็กของรีวิว
+    if selected_tag:
+        places = places.filter(reviews__tags__name=selected_tag).distinct()
 
-    if feed_filter == "latest":
-        recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
-            "-created_at"
+    # ดึงแท็กทั้งหมดสำหรับแสดงปุ่มกรอง
+    all_tags = Tag.objects.all()
+
+    # ดึงข้อมูลรีวิวเฉพาะเมื่อเปิดแท็บฟีด (feed) เพื่อประหยัด Query และเวลาโหลด
+    recent_reviews = []
+    if tab == "feed":
+        reviews_qs = (
+            Review.objects.filter(place__is_approved=True)
+            .select_related("place", "user__profile")
+            .prefetch_related("images")
         )
-    elif feed_filter == "trending":
-        one_week_ago = timezone.now() - timedelta(days=7)
-        recent_reviews = reviews_qs.annotate(
-            weekly_likes=Count("likes", filter=Q(likes__created_at__gte=one_week_ago)),
-            likes_count=Count("likes"),
-        ).order_by("-weekly_likes", "-created_at")
-    else:  # top
-        recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
-            "-likes_count", "-created_at"
-        )
+        if feed_filter == "latest":
+            recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
+                "-created_at"
+            )
+        elif feed_filter == "trending":
+            one_week_ago = timezone.now() - timedelta(days=7)
+            recent_reviews = reviews_qs.annotate(
+                weekly_likes=Count("likes", filter=Q(likes__created_at__gte=one_week_ago)),
+                likes_count=Count("likes"),
+            ).order_by("-weekly_likes", "-created_at")
+        else:  # top
+            recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
+                "-likes_count", "-created_at"
+            )
 
     user_liked_review_ids = []
     user_bookmarked_place_ids = []
     if request.user.is_authenticated:
-        user_liked_review_ids = ReviewLike.objects.filter(
-            user=request.user
-        ).values_list("review_id", flat=True)
+        if tab == "feed":
+            user_liked_review_ids = ReviewLike.objects.filter(
+                user=request.user
+            ).values_list("review_id", flat=True)
         user_bookmarked_place_ids = Bookmark.objects.filter(
             user=request.user
         ).values_list("place_id", flat=True)
@@ -85,15 +110,20 @@ def place_list(request):
             "current_tab": tab,
             "feed_filter": feed_filter,
             "selected_filter": selected_filter,
+            "all_tags": all_tags,
+            "selected_tag": selected_tag,
         },
     )
 
 
 def place_detail(request, pk):
-    place = get_object_or_404(Place, pk=pk)
+    place = get_object_or_404(
+        Place.objects.prefetch_related("reviews"), pk=pk
+    )
     reviews = (
         place.reviews.annotate(likes_count=Count("likes"))
         .select_related("user__profile")
+        .prefetch_related("tags", "images")
         .order_by("-likes_count", "-created_at")
     )
     form = ReviewForm()
@@ -117,6 +147,16 @@ def place_detail(request, pk):
             review.place = place
             review.user = request.user
             review.save()
+
+            # ดึงไฟล์ทั้งหมดที่ผู้ใช้เลือกพร้อมกัน
+            images = request.FILES.getlist("upload_images")
+            for img in images:
+                ReviewImage.objects.create(review=review, image=img)
+
+            # เผื่อกรณีเลือกไฟล์เดียวผ่าน name="image" ด้วย
+            if "image" in request.FILES and not images:
+                ReviewImage.objects.create(review=review, image=request.FILES["image"])
+
             messages.success(request, "บันทึกรีวิวของคุณเรียบร้อยแล้ว!")
             return redirect("place_detail", pk=pk)
 
@@ -351,3 +391,100 @@ def set_featured_badge(request):
 
     return redirect(request.META.get("HTTP_REFERER", "profile"))
 
+
+@login_required(login_url="login")
+def quick_review(request):
+    places = Place.objects.filter(is_approved=True).order_by("name")
+
+    if request.method == "POST":
+        place_name = request.POST.get("place_name", "").strip()
+        rating = request.POST.get("rating", "5")
+        comment = request.POST.get("comment", "").strip()
+
+        if not place_name:
+            messages.error(request, "กรุณาระบุชื่อสถานที่ที่ต้องการรีวิว")
+            return render(
+                request,
+                "quick_review.html",
+                {
+                    "approved_places": places,
+                    "places": places,
+                    "rating": rating,
+                    "comment": comment,
+                },
+            )
+
+        if not comment:
+            messages.error(request, "กรุณากรอกความคิดเห็นหรือความประทับใจ")
+            return render(
+                request,
+                "quick_review.html",
+                {
+                    "approved_places": places,
+                    "places": places,
+                    "place_name": place_name,
+                    "rating": rating,
+                },
+            )
+
+        # ค้นหาว่ามีชื่อนี้อยู่แล้วไหม ถ้ายังไม่มีให้สร้างขึ้นมาใหม่โดยอัตโนมัติ (is_approved=False)
+        place, created = Place.objects.get_or_create(
+            name=place_name,
+            defaults={
+                "is_approved": False,
+                "category": "other",
+                "description": "สถานที่เพิ่มโดยผู้ใช้ผ่านรีวิวด่วน (รอการตรวจสอบ)",
+                "created_by": request.user,
+            },
+        )
+
+        comment = mask_profanity(comment)
+        try:
+            rating_val = int(rating)
+            if rating_val < 1 or rating_val > 5:
+                rating_val = 5
+        except (ValueError, TypeError):
+            rating_val = 5
+
+        # บันทึกรีวิวโดยผูกกับ place ตัวนี้ทันที
+        review = Review.objects.create(
+            place=place,
+            user=request.user,
+            rating=rating_val,
+            comment=comment,
+        )
+
+        # บันทึกรูปภาพหลายรูป (ReviewImage)
+        images = request.FILES.getlist("upload_images")
+        for img in images:
+            ReviewImage.objects.create(review=review, image=img)
+        if "image" in request.FILES and not images:
+            ReviewImage.objects.create(review=review, image=request.FILES["image"])
+
+        if created:
+            messages.success(
+                request,
+                f"บันทึกรีวิวและเสนอสถานที่ใหม่ '{place.name}' เรียบร้อยแล้ว (รอการตรวจสอบจากผู้ดูแลระบบ)",
+            )
+        else:
+            messages.success(request, f"บันทึกรีวิวสถานที่ '{place.name}' เรียบร้อยแล้ว!")
+
+        return redirect("place_detail", pk=place.pk)
+
+    # GET request
+    selected_place_name = ""
+    place_id = request.GET.get("place_id")
+    if place_id:
+        p = Place.objects.filter(pk=place_id).first()
+        if p:
+            selected_place_name = p.name
+
+    return render(
+        request,
+        "quick_review.html",
+        {
+            "approved_places": places,
+            "places": places,
+            "place_name": selected_place_name,
+        },
+    )

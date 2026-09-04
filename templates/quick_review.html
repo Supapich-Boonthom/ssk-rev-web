@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}เขียนรีวิวด่วน - Sisaket Reviews{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto py-6 px-4">
+  <!-- Breadcrumb / Back Button -->
+  <button type="button" onclick="history.back()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-amber-600 transition mb-4 cursor-pointer">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+    กลับหน้ารายการ
+  </button>
+
+  <!-- Main Card -->
+  <div class="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-sm">
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+      <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-2xl text-amber-500 shrink-0">
+        ⚡
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-gray-900">เขียนรีวิวด่วน</h1>
+        <p class="text-xs text-gray-500 mt-0.5">แบ่งปันประสบการณ์และความประทับใจของคุณได้ทันที</p>
+      </div>
+    </div>
+
+    <!-- Review Form -->
+    <form method="POST" enctype="multipart/form-data" class="space-y-5">
+      {% csrf_token %}
+
+      {% if form.errors %}
+      <div class="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-xs space-y-1">
+        {% for field, errors in form.errors.items %}
+          <p><strong>{{ field }}:</strong> {{ errors|striptags }}</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- 1. ค้นหาสถานที่ หรือระบุสถานที่ใหม่ -->
+      <div class="relative">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">
+          📍 สถานที่ที่ต้องการรีวิว <span class="text-rose-500">*</span>
+        </label>
+        
+        <input 
+          type="text" 
+          id="place-search-input" 
+          name="place_name" 
+          value="{{ place_name|default:'' }}"
+          placeholder="พิมพ์เพื่อค้นหา หรือระบุชื่อสถานที่ใหม่..." 
+          required 
+          autocomplete="off"
+          class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-400 focus:outline-none text-sm bg-white"
+          oninput="handlePlaceFilter(this.value)"
+        >
+
+        <!-- กล่องแสดงรายการค้นหา (ซ่อนอยู่ จะโผล่เฉพาะตอนเริ่มพิมพ์) -->
+        <ul 
+          id="places-dropdown" 
+          class="absolute left-0 right-0 z-50 mt-1 max-h-56 overflow-y-auto bg-white rounded-xl border border-gray-100 shadow-xl hidden text-sm divide-y divide-gray-50"
+        >
+          {% for p in approved_places %}
+            <li 
+              class="place-item px-4 py-2.5 hover:bg-amber-50 cursor-pointer text-gray-700 transition"
+              data-name="{{ p.name }}"
+              onclick="selectPlace('{{ p.name|escapejs }}')"
+            >
+              {{ p.name }}
+            </li>
+          {% endfor %}
+        </ul>
+
+        <p class="text-xs text-gray-400 mt-1">💡 หากพิมพ์แล้วไม่พบในรายการ ระบบจะเสนอชื่อใหม่นี้ให้อัตโนมัติ</p>
+      </div>
+
+      <!-- 2. ให้คะแนนความประทับใจ -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          ⭐ ให้คะแนนความประทับใจ <span class="text-rose-500">*</span>
+        </label>
+        <input type="hidden" name="rating" id="rating-input" value="{{ rating|default:'5' }}" required />
+        <div class="flex items-center gap-1.5 cursor-pointer" id="star-rating-container">
+          {% for i in "12345" %}
+          <button
+            type="button"
+            data-value="{{ forloop.counter }}"
+            class="star-btn p-1 text-3xl text-amber-400 hover:scale-125 transition-transform duration-150 focus:outline-none"
+          >
+            ★
+          </button>
+          {% endfor %}
+          <span id="rating-text" class="ml-2 text-sm font-bold text-amber-600">5 ดาว (ยอดเยี่ยม)</span>
+        </div>
+      </div>
+
+      <!-- 3. ความคิดเห็น -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1">
+          💬 ความคิดเห็น <span class="text-rose-500">*</span>
+        </label>
+        <textarea
+          name="comment"
+          rows="3"
+          required
+          placeholder="แชร์ความประทับใจ หรือข้อแนะนำสั้นๆ..."
+          class="w-full p-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-400 focus:outline-none text-sm"
+        >{{ comment|default:'' }}</textarea>
+      </div>
+
+      <!-- 4. แนบรูปภาพหลายรูป + แสดงตัวอย่าง -->
+      <div class="pt-1">
+        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+          📷 แนบรูปภาพ (เลือกได้หลายรูป)
+        </label>
+        <input
+          type="file"
+          id="review-image-input"
+          name="upload_images"
+          multiple
+          accept="image/*"
+          class="block w-full text-xs text-gray-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer border border-dashed border-gray-200 rounded-2xl p-2 bg-gray-50/50"
+        />
+        <!-- กล่องแสดงรูปตัวอย่างก่อนกดส่ง -->
+        <div id="image-preview-container" class="flex flex-wrap gap-2.5 mt-3 hidden"></div>
+      </div>
+
+      <!-- Submit & Cancel Buttons -->
+      <div class="pt-4 flex items-center gap-3">
+        <button
+          type="submit"
+          class="flex-1 py-3 px-5 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white font-semibold rounded-2xl text-sm transition shadow-sm hover:shadow"
+        >
+          ✨ ส่งรีวิว
+        </button>
+        <a
+          href="{% url 'place_list' %}"
+          class="py-3 px-5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-2xl text-sm transition"
+        >
+          ยกเลิก
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // จัดการการคลิกเลือกดาว
+  const starBtns = document.querySelectorAll(".star-btn");
+  const ratingInput = document.getElementById("rating-input");
+  const ratingText = document.getElementById("rating-text");
+
+  const ratingLabels = {
+    1: "1 ดาว (ต้องปรับปรุง)",
+    2: "2 ดาว (พอใช้)",
+    3: "3 ดาว (ดี)",
+    4: "4 ดาว (ดีมาก)",
+    5: "5 ดาว (ยอดเยี่ยม)",
+  };
+
+  function updateStars(rating) {
+    ratingInput.value = rating;
+    ratingText.textContent = ratingLabels[rating] || (rating + " ดาว");
+
+    starBtns.forEach((btn) => {
+      const btnVal = parseInt(btn.getAttribute("data-value"));
+      if (btnVal <= rating) {
+        btn.classList.remove("text-gray-300");
+        btn.classList.add("text-amber-400");
+      } else {
+        btn.classList.remove("text-amber-400");
+        btn.classList.add("text-gray-300");
+      }
+    });
+  }
+
+  starBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const val = parseInt(btn.getAttribute("data-value"));
+      updateStars(val);
+    });
+  });
+
+  // กำหนดค่าเริ่มต้นตามฟอร์ม
+  updateStars(parseInt(ratingInput.value) || 5);
+
+  // พรีวิวรูปภาพก่อนส่ง
+  const imageInput = document.getElementById("review-image-input");
+  const previewContainer = document.getElementById("image-preview-container");
+
+  if (imageInput && previewContainer) {
+    imageInput.addEventListener("change", function () {
+      previewContainer.innerHTML = "";
+
+      const files = Array.from(this.files);
+
+      if (files.length > 0) {
+        previewContainer.classList.remove("hidden");
+
+        files.forEach((file, index) => {
+          if (!file.type.startsWith("image/")) return;
+
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const div = document.createElement("div");
+            div.className =
+              "relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50";
+
+            div.innerHTML = `
+              <img src="${e.target.result}" class="w-full h-full object-cover">
+              <span class="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-md font-medium">
+                ${index + 1}
+              </span>
+            `;
+            previewContainer.appendChild(div);
+          };
+          reader.readAsDataURL(file);
+        });
+      } else {
+        previewContainer.classList.add("hidden");
+      }
+    });
+  }
+
+  // ควบคุมการกรองและเลือกสถานที่จาก Dropdown
+  function handlePlaceFilter(keyword) {
+    const dropdown = document.getElementById("places-dropdown");
+    const items = document.querySelectorAll(".place-item");
+    const cleanKeyword = keyword.trim().toLowerCase();
+
+    // ถ้ายังไม่ได้พิมพ์อะไรเลย ให้ซ่อนกล่องตัวเลือกไว้ ไม่โผล่มากวนสายตา
+    if (!cleanKeyword) {
+      dropdown.classList.add("hidden");
+      return;
+    }
+
+    let matchCount = 0;
+    items.forEach((item) => {
+      const name = (item.getAttribute("data-name") || "").toLowerCase();
+      if (name.includes(cleanKeyword)) {
+        item.classList.remove("hidden");
+        matchCount++;
+      } else {
+        item.classList.add("hidden");
+      }
+    });
+
+    // แสดงผลกล่องเมนูก็ต่อเมื่อมีคำที่ตรงกับที่พิมพ์
+    if (matchCount > 0) {
+      dropdown.classList.remove("hidden");
+    } else {
+      dropdown.classList.add("hidden");
+    }
+  }
+
+  function selectPlace(name) {
+    const input = document.getElementById("place-search-input");
+    input.value = name;
+    document.getElementById("places-dropdown").classList.add("hidden");
+  }
+
+  // ปิด Dropdown อัตโนมัติเมื่อคลิกที่ว่างข้างนอก
+  document.addEventListener("click", function (e) {
+    const input = document.getElementById("place-search-input");
+    const dropdown = document.getElementById("places-dropdown");
+    if (
+      input &&
+      dropdown &&
+      !input.contains(e.target) &&
+      !dropdown.contains(e.target)
+    ) {
+      dropdown.classList.add("hidden");
+    }
+  });
+</script>
+{% endblock %}

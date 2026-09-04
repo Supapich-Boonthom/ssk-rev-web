@@ -33,7 +33,52 @@
     >
       เข้าสู่ระบบ
     </button>
+
+    <div class="mt-4 text-center">
+      <button 
+        type="button" 
+        onclick="openContactAdminModal()"
+        class="text-xs text-gray-500 hover:text-amber-600 transition"
+      >
+        ลืมรหัสผ่าน? คลิกติดต่อผู้ดูแลระบบ
+      </button>
+    </div>
   </form>
+
+  <!-- Modal แจ้งเตือนติดต่อแอดมิน -->
+  <div id="contact-admin-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-xl border border-gray-100">
+      <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+        🔒
+      </div>
+      <h3 class="text-lg font-bold text-gray-800 mb-1">ลืมรหัสผ่านเข้าใช้งาน?</h3>
+      <p class="text-xs text-gray-500 mb-4 leading-relaxed">
+        เนื่องจากระบบความปลอดภัย กรุณาแจ้ง <b>ชื่อผู้ใช้ (Username)</b> ของคุณต่อผู้ดูแลระบบ เพื่อดำเนินการออกรหัสผ่านชั่วคราวให้ค่ะ
+      </p>
+      
+      <div class="bg-gray-50 rounded-xl p-3 mb-4 text-left text-xs text-gray-600 space-y-1">
+        <p>💬 <b>ติดต่อ:</b> ผู้ดูแลระบบประจำแพลตฟอร์ม</p>
+        <p>✉️ <b>อีเมล:</b> admin@sisaket-travel.local</p>
+      </div>
+
+      <button 
+        type="button" 
+        onclick="closeContactAdminModal()"
+        class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-xl transition"
+      >
+        เข้าใจแล้ว
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function openContactAdminModal() {
+      document.getElementById('contact-admin-modal').classList.remove('hidden');
+    }
+    function closeContactAdminModal() {
+      document.getElementById('contact-admin-modal').classList.add('hidden');
+    }
+  </script>
   <p class="text-center text-xs text-gray-500 mt-6">
     ยังไม่มีบัญชีผู้ใช้?
     <a

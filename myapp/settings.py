@@ -86,7 +86,7 @@ db_url = os.getenv("DATABASE_URL")
 if db_url:
     DATABASES = {
         "default": dj_database_url.config(
-            default=db_url, conn_max_age=0, ssl_require=True
+            default=db_url, conn_max_age=600, ssl_require=True
         )
     }
 else:
@@ -143,6 +143,16 @@ CLOUDINARY_STORAGE = {
     "API_SECRET": os.getenv("CLOUDINARY_API_SECRET"),
 }
 
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 MEDIA_URL = "/media/"
+

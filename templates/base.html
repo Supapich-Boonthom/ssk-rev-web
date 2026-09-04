@@ -16,6 +16,13 @@
       body {
         font-family: "Prompt", sans-serif;
       }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
     </style>
   </head>
   <body
@@ -370,6 +377,74 @@
       document.getElementById('badge-detail-modal')?.addEventListener('click', (e) => {
         if (e.target === document.getElementById('badge-detail-modal')) {
           closeBadgeModal();
+        }
+      });
+    </script>
+
+    <!-- Lightbox Modal สำหรับดูภาพขนาดเต็ม -->
+    <div id="image-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300" onclick="closeImageModal()">
+      <!-- ปุ่มกากบาทปิดมุมขวาบน -->
+      <button type="button" class="absolute top-5 right-5 text-white text-3xl font-bold hover:text-amber-400 z-10 p-2" onclick="closeImageModal()">
+        ✕
+      </button>
+      
+      <!-- รูปภาพขนาดเต็ม (คลิกที่รูปแล้วไม่ปิด modal) -->
+      <div class="max-w-4xl max-h-[90vh] flex items-center justify-center" onclick="event.stopPropagation()">
+        <img id="modal-img" src="" alt="ภาพขนาดเต็ม" class="max-w-full max-h-[85vh] object-contain rounded-none shadow-2xl">
+      </div>
+    </div>
+
+    <script>
+      function openImageModal(imgSrc) {
+        const modal = document.getElementById('image-modal');
+        const modalImg = document.getElementById('modal-img');
+        
+        modalImg.src = imgSrc;
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // ล็อกไม่ให้หน้าเว็บเลื่อนตอนดูรูป
+      }
+
+      function closeImageModal() {
+        const modal = document.getElementById('image-modal');
+        modal.classList.add('hidden');
+        document.body.style.overflow = ''; // คืนค่าให้หน้าเว็บเลื่อนได้ปกติ
+      }
+
+      // กดปุ่ม Esc บนคีย์บอร์ดเพื่อปิดได้ด้วย
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeImageModal();
+        }
+      });
+    </script>
+
+    <!-- Floating Action Button (FAB) รีวิวด่วนมุมขวาล่าง -->
+    <a 
+      href="{% url 'quick_review' %}" 
+      class="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 bg-amber-500 hover:bg-amber-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 group"
+      title="เขียนรีวิวด่วน"
+    >
+      <!-- ไอคอนเครื่องหมายบวก (+) -->
+      <svg class="w-7 h-7 transition-transform duration-200 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+      </svg>
+    </a>
+
+    <!-- ระบบจำตำแหน่ง Scroll Position อัตโนมัติ -->
+    <script>
+      // 1. จำตำแหน่ง Scroll ก่อนออกจากหน้านั้น
+      window.addEventListener('beforeunload', function () {
+        sessionStorage.setItem('scrollPos_' + window.location.pathname, window.scrollY);
+      });
+
+      // 2. เมื่อโหลดหน้าเว็บเสร็จ ตรวจสอบว่ามีตำแหน่งเดิมบันทึกไว้ไหม
+      window.addEventListener('load', function () {
+        const savedPos = sessionStorage.getItem('scrollPos_' + window.location.pathname);
+        if (savedPos !== null) {
+          window.scrollTo({
+            top: parseInt(savedPos, 10),
+            behavior: 'instant' // เลื่อนกลับตำแหน่งเดิมทันที ไม่ต้องทำอนิเมชั่นเลื่อนให้ตาลาย
+          });
         }
       });
     </script>

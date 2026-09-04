@@ -1,7 +1,5 @@
 import os
 import django
-import requests
-from django.core.files.base import ContentFile
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myapp.settings")
 django.setup()
@@ -17,7 +15,6 @@ places_data = [
         "latitude": 15.1017,
         "longitude": 104.3168,
         "google_maps_url": "https://www.google.com/maps/search/?api=1&query=15.1017,104.3168",
-        "image_url": "https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=1000&auto=format&fit=crop&q=80",
     },
     {
         "name": "วัดมหาพุทธาราม (วัดพระโต)",
@@ -27,7 +24,6 @@ places_data = [
         "latitude": 15.1189,
         "longitude": 104.3274,
         "google_maps_url": "https://www.google.com/maps/search/?api=1&query=15.1189,104.3274",
-        "image_url": "https://images.unsplash.com/photo-1548013146-72479768bada?w=1000&auto=format&fit=crop&q=80",
     },
     {
         "name": "ปราสาทสระกำแพงใหญ่",
@@ -37,7 +33,6 @@ places_data = [
         "latitude": 15.0864,
         "longitude": 104.1481,
         "google_maps_url": "https://www.google.com/maps/search/?api=1&query=15.0864,104.1481",
-        "image_url": "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=1000&auto=format&fit=crop&q=80",
     },
     {
         "name": "ผามออีแดง",
@@ -47,7 +42,6 @@ places_data = [
         "latitude": 14.3887,
         "longitude": 104.6931,
         "google_maps_url": "https://www.google.com/maps/search/?api=1&query=14.3887,104.6931",
-        "image_url": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1000&auto=format&fit=crop&q=80",
     },
     {
         "name": "ถนนคนเดินศรีสะเกษ",
@@ -57,7 +51,6 @@ places_data = [
         "latitude": 15.1172,
         "longitude": 104.3298,
         "google_maps_url": "https://www.google.com/maps/search/?api=1&query=15.1172,104.3298",
-        "image_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80",
     },
     {
         "name": "หอคอยศรีลำดวนสวรรค์ (Sisaket Aquarium)",
@@ -67,27 +60,104 @@ places_data = [
         "latitude": 15.1052,
         "longitude": 104.3392,
         "google_maps_url": "https://www.google.com/maps/search/?api=1&query=15.1052,104.3392",
-        "image_url": "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1000&auto=format&fit=crop&q=80",
+    },
+    {
+        "name": "วัดป่าศรีมงคลรัตนาราม (ถ้ำนาคา/วังบาดาลจำลอง)",
+        "category": "temple",
+        "address": "ตำบลโคกจาน อำเภออุทุมพรพิสัย จังหวัดศรีสะเกษ",
+        "description": "โดดเด่นด้วยถ้ำวังบาดาลจำลองความวิจิตรงดงามของพญานาค ประดับประดาด้วยหินงอกหินย้อยจำลองและแสงสีตระการตา เป็นสถานที่ท่องเที่ยวเชิงพุทธศาสนายอดนิยม",
+        "latitude": 15.0682,
+        "longitude": 104.1481,
+        "google_maps_url": "https://maps.google.com/?cid=7901046187216124896",
+    },
+    {
+        "name": "วัดไพรพัฒนา (หลวงปู่สรวง)",
+        "category": "temple",
+        "address": "ตำบลไพรพัฒนา อำเภอภูสิงห์ จังหวัดศรีสะเกษ",
+        "description": "สถานที่พำนักและสรีระสังขารที่ไม่เน่าเปื่อยของหลวงปู่สรวง เทวดาเดินดิน มีพิธีลอดใต้โลงศพเพื่อความเป็นสิริมงคล เป็นที่เคารพศรัทธาอย่างสูง",
+        "latitude": 14.4984,
+        "longitude": 104.0935,
+        "google_maps_url": "https://maps.google.com/?cid=15539563456341202387",
+    },
+    {
+        "name": "วัดป่ามหาเจดีย์แก้ว (วัดล้านขวด)",
+        "category": "temple",
+        "address": "ตำบลโนนสูง อำเภอขุนหาญ จังหวัดศรีสะเกษ",
+        "description": "สถาปัตยกรรมสร้างสรรค์จากขวดแก้วรีไซเคิลกว่า 1.5 ล้านขวด ทั้งตัวอุโบสถ เจดีย์ และซุ้มประตู สวยงามสะท้อนแนวคิดการอนุรักษ์สิ่งแวดล้อม",
+        "latitude": 14.6186,
+        "longitude": 104.4308,
+        "google_maps_url": "https://maps.google.com/?cid=17765104443425028232",
+    },
+    {
+        "name": "พระธาตุเรืองรอง (วัดบ้านสร้างเรือง)",
+        "category": "temple",
+        "address": "ตำบลหญ้าปล้อง อำเภอเมือง จังหวัดศรีสะเกษ",
+        "description": "พระธาตุศิลปะประยุกต์ 4 เผ่าไทย (เขมร ส่วย ลาว เยอ) สูง 6 ชั้น ภายในจัดแสดงพิพิธภัณฑ์พื้นบ้านบอกเล่าวิถีชีวิตดั้งเดิมของชาวศรีสะเกษ",
+        "latitude": 15.1558,
+        "longitude": 104.2862,
+        "google_maps_url": "https://maps.google.com/?cid=4378129524021204650",
+    },
+    {
+        "name": "ปราสาทหินสระกำแพงน้อย",
+        "category": "temple",
+        "address": "ตำบลขะยูง อำเภออุทุมพรพิสัย จังหวัดศรีสะเกษ",
+        "description": "อโรคยศาลหรือสถานพยาบาลโบราณสมัยพระเจ้าชัยวรมันที่ 7 สถาปัตยกรรมขอมสร้างด้วยศิลาแลงและหินทราย พร้อมสระน้ำโบราณศักดิ์สิทธิ์",
+        "latitude": 15.1472,
+        "longitude": 104.1843,
+        "google_maps_url": "https://maps.google.com/?cid=12361730040713730715",
+    },
+    {
+        "name": "ปราสาทห้วยทับทัน (ปราสาทบ้านปราสาท)",
+        "category": "temple",
+        "address": "ตำบลปราสาท อำเภอห้วยทับทัน จังหวัดศรีสะเกษ",
+        "description": "โบราณสถานขอมประกอบด้วยปรางค์อิฐ 3 องค์บนฐานศิลาแลงเดียวกัน โดดเด่นด้วยทับหลังหินทรายสลักลวดลายศิลปะแบบบาปวนและคลัง",
+        "latitude": 15.1097,
+        "longitude": 104.0178,
+        "google_maps_url": "https://maps.google.com/?cid=5623724339971884907",
+    },
+    {
+        "name": "น้ำตกสำโรงเกียรติ",
+        "category": "nature",
+        "address": "เขตรักษาพันธุ์สัตว์ป่าพนมดงรัก อำเภอขุนหาญ จังหวัดศรีสะเกษ",
+        "description": "น้ำตกขนาดกลางไหลจากหน้าผาสูงประมาณ 8 เมตร ท่ามกลางผืนป่าที่สมบูรณ์และร่มรื่น เหมาะแก่การพักผ่อนและลงเล่นน้ำ",
+        "latitude": 14.5097,
+        "longitude": 104.5061,
+        "google_maps_url": "https://maps.google.com/?cid=3017772648714654918",
+    },
+    {
+        "name": "น้ำตกห้วยจันทร์",
+        "category": "nature",
+        "address": "ตำบลห้วยจันทร์ อำเภอขุนหาญ จังหวัดศรีสะเกษ",
+        "description": "สายน้ำใสไหลลดหลั่นตามแก่งหินหลายชั้น ร่มรื่นด้วยต้นไม้นานาพันธุ์ มีน้ำไหลเย็นสบายตลอดทั้งปี เหมาะกับการมาปิกนิก",
+        "latitude": 14.5422,
+        "longitude": 104.4239,
+        "google_maps_url": "https://maps.google.com/?cid=8152528731006198024",
+    },
+    {
+        "name": "จุดชมวิว ผาพญากูปรี",
+        "category": "nature",
+        "address": "ตำบลไพรพัฒนา อำเภอภูสิงห์ จังหวัดศรีสะเกษ",
+        "description": "จุดชมวิวหน้าผาสูงบนเทือกเขาพนมดงรัก มองเห็นอ่างเก็บน้ำห้วยศาลาและป่าไม้ฝั่งกัมพูชาอย่างกว้างไกล มีประติมากรรมกูปรีเป็นแลนด์มาร์กสำคัญ",
+        "latitude": 14.4172,
+        "longitude": 104.0886,
+        "google_maps_url": "https://maps.google.com/?cid=13437599026219435892",
+    },
+    {
+        "name": "วัดบ้านด่าน (หลวงปู่หมุน ฐิตสีโล)",
+        "category": "temple",
+        "address": "ตำบลสร้างปี่ อำเภอราษีไศล จังหวัดศรีสะเกษ",
+        "description": "ที่ประดิษฐานมหาเจดีย์และรูปเหมือนของหลวงปู่หมุน ฐิตสีโล พระมหาเถระ 5 แผ่นดินผู้ทรงวิทยาคมและเป็นที่เลื่อมใสศรัทธาอย่างกว้างขวาง",
+        "latitude": 15.3056,
+        "longitude": 104.1611,
+        "google_maps_url": "https://maps.google.com/?cid=13824391698748380262",
     },
 ]
 
 print("กำลังนำเข้าข้อมูลสถานที่และดาวน์โหลดรูปภาพ...")
 
 for item in places_data:
-    img_url = item.pop("image_url", None)
+    item["is_approved"] = True
     place, created = Place.objects.update_or_create(name=item["name"], defaults=item)
-
-    # ดาวน์โหลดรูปภาพและบันทึกลง Cloudinary หากยังไม่มีรูป
-    if img_url and not place.image:
-        try:
-            res = requests.get(img_url, timeout=10)
-            if res.status_code == 200:
-                filename = f"{place.id}_cover.jpg"
-                place.image.save(filename, ContentFile(res.content), save=True)
-                print(f"📸 อัปโหลดรูปสำเร็จ: {place.name}")
-        except Exception as e:
-            print(f"⚠️ โหลดรูปไม่สำเร็จสำหรับ {place.name}: {e}")
-
     print(f"✅ บันทึกข้อมูล: {place.name}")
 
 print("เสร็จสิ้นการ Seed ข้อมูลทั้งหมดเรียบร้อยแล้ว!")

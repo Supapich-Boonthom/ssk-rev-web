@@ -40,6 +40,7 @@
     <input
       type="text"
       name="q"
+      id="search-input"
       value="{{ query }}"
       placeholder="ค้นหาชื่อสถานที่ หรือที่อยู่..."
       class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
@@ -65,8 +66,7 @@
     >
       <span>🔖</span> ที่บันทึกไว้
     </a>
-    {% endif %}
-    {% for cat_key, cat_name in categories %}
+    {% endif %} {% for cat_key, cat_name in categories %}
     <a
       href="?tab=places&category={{ cat_key }}{% if query %}&q={{ query }}{% endif %}"
       class="px-4 py-1.5 rounded-full text-xs font-medium {% if selected_category == cat_key %}bg-amber-600 text-white{% else %}bg-white text-gray-600 border border-gray-200 hover:border-gray-400{% endif %}"
@@ -76,6 +76,20 @@
     {% endfor %}
   </div>
 </div>
+
+<!-- แถบปุ่มแท็กแฮชแท็ก -->
+{% if all_tags %}
+<div class="flex flex-wrap gap-2 justify-center max-w-xl mx-auto mb-6">
+  {% for tag in all_tags %}
+  <a
+    href="?tab=places&tag={{ tag.name }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}"
+    class="px-3 py-1 rounded-full text-xs font-medium transition border {% if selected_tag == tag.name %}bg-amber-500 text-white border-amber-500 shadow-sm{% else %}bg-white text-gray-600 border-amber-200 hover:bg-amber-50{% endif %}"
+  >
+    #{{ tag.name }}
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
 
 <!-- แถบปุ่มสลับมุมมอง -->
 <div class="flex justify-end max-w-6xl mx-auto px-4 mb-4">
@@ -111,11 +125,52 @@
   {% for place in places %}
   <a
     href="{% url 'place_detail' place.pk %}"
-    class="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col"
+    class="place-card group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col"
+    data-name="{{ place.name|lower }}"
+    data-desc="{{ place.description|lower }}"
   >
-    <div class="h-48 bg-gray-100 overflow-hidden relative">
-      <!-- แสดงไอคอนริบบิ้นเฉพาะเมื่อบันทึกไว้แล้ว (ไม่รกสายตา) -->
-      {% if place.pk in user_bookmarked_place_ids %}
+    <div
+      class="relative w-full h-48 bg-[#f4f5f7] flex items-center justify-center overflow-hidden"
+    >
+      {% if place.image %}
+      <img
+        src="{{ place.image.url }}"
+        alt="{{ place.name }}"
+        class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+        onerror="
+          this.style.display = 'none';
+          if (this.nextElementSibling)
+            this.nextElementSibling.classList.remove('hidden');
+        "
+      />
+      <span class="hidden text-4xl filter drop-shadow-sm select-none">📍</span>
+      {% elif place.image_url %}
+      <img
+        src="{{ place.image_url }}"
+        alt="{{ place.name }}"
+        class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+        onerror="
+          this.style.display = 'none';
+          if (this.nextElementSibling)
+            this.nextElementSibling.classList.remove('hidden');
+        "
+      />
+      <span class="hidden text-4xl filter drop-shadow-sm select-none">📍</span>
+      {% else %}
+      <!-- กรณีไม่มีรูป ให้โชว์หมุดปักสีชมพูตรงกลางเหมือนเดิม -->
+      <span class="text-4xl filter drop-shadow-sm select-none">📍</span>
+      {% endif %}
+
+      <!-- ป้ายคะแนนดาวมุมขวาบน (คงไว้เหมือนเดิม) -->
+      <div
+        class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-gray-700 shadow-sm flex items-center gap-1"
+      >
+        <span class="text-amber-500">★</span>
+        <span>{{ place.average_rating|default:"0.0" }}</span>
+      </div>
+
+      <!-- ปุ่มบุ๊กมาร์กมุมซ้ายบน -->
+      {% if user.is_authenticated and place.pk in user_bookmarked_place_ids %}
       <div
         class="absolute top-3 left-3 bg-amber-500/90 text-white p-1.5 rounded-lg shadow-sm backdrop-blur-sm z-10 flex items-center justify-center"
         title="บันทึกไว้แล้ว"
@@ -124,29 +179,11 @@
           <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
         </svg>
       </div>
-      {% endif %} {% if place.image and place.image.url %}
-      <img
-        src="{{ place.image.url }}"
-        alt="{{ place.name }}"
-        class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-      />
-      {% else %}
-      <div
-        class="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100 text-4xl"
-      >
-        📍
-      </div>
       {% endif %}
-      <span
-        class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-xs font-semibold text-amber-700 shadow-sm"
-      >
-        ★ {{ place.average_rating }}
-      </span>
     </div>
     <div class="p-5 flex-grow flex flex-col justify-between">
       <div>
-        <span
-          class="text-xs font-semibold text-amber-600 uppercase tracking-wide"
+        <span class="text-xs font-semibold text-amber-600 tracking-wide"
           >{{ place.get_category_display }}</span
         >
         <h2
@@ -174,7 +211,7 @@
         class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400"
       >
         <span>📍 {{ place.address|default:"ศรีสะเกษ" }}</span>
-        <span>{{ place.reviews.count }} รีวิว</span>
+        <span>{{ place.reviews_count|default:place.reviews.count }} รีวิว</span>
       </div>
     </div>
   </a>
@@ -213,6 +250,15 @@
     {% endif %}
   </div>
   {% endfor %}
+</div>
+
+<!-- กล่องแจ้งเตือนเมื่อค้นหาแบบ real-time ไม่พบผลลัพธ์ -->
+<div id="no-results" class="hidden text-center py-12">
+  <div class="text-3xl mb-2">🔍</div>
+  <p class="text-xs font-semibold text-gray-500">
+    ไม่พบสถานที่ที่ตรงกับคำค้นหา
+  </p>
+  <p class="text-[11px] text-gray-400 mt-0.5">ลองพิมพ์คำค้นหาอื่นดูนะ</p>
 </div>
 
 <!-- ข้อความแนะนำขนาดเล็กด้านล่างสุด -->
@@ -257,7 +303,10 @@
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <a href="{% url 'user_profile' review.user.username %}">
-          <img src="{{ review.user.profile.avatar_url }}" class="w-10 h-10 rounded-full object-cover border border-amber-100 shadow-sm hover:opacity-80 transition">
+          <img
+            src="{{ review.user.profile.avatar_url }}"
+            class="w-10 h-10 rounded-full object-cover border border-amber-100 shadow-sm hover:opacity-80 transition"
+          />
         </a>
         <div>
           <div class="flex items-center gap-1.5 flex-wrap">
@@ -315,16 +364,32 @@
     </p>
 
     <!-- Review Photo -->
-    {% if review.image and review.image.url %}
-    <div
-      class="mt-4 rounded-2xl overflow-hidden border border-gray-100 max-h-96"
-    >
-      <img
-        src="{{ review.image.url }}"
-        alt="รูปประกอบรีวิว"
-        class="w-full h-full object-cover"
-      />
-    </div>
+    {% if review.images.all %}
+      <div class="flex gap-2.5 overflow-x-auto py-2 no-scrollbar mt-3">
+        {% for img_obj in review.images.all %}
+          <div class="shrink-0 w-36 h-28 sm:w-44 sm:h-32 rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 cursor-pointer">
+            <img 
+              src="{{ img_obj.image.url }}" 
+              alt="รูปภาพรีวิว" 
+              onclick="openImageModal(this.src)"
+              class="w-full h-full object-cover hover:scale-105 transition duration-200"
+              title="คลิกเพื่อดูภาพขนาดเต็ม"
+              loading="lazy"
+            >
+          </div>
+        {% endfor %}
+      </div>
+    {% elif review.image %}
+      <div class="mt-3 max-w-md overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
+        <img 
+          src="{{ review.image.url }}" 
+          alt="รูปภาพรีวิว" 
+          onclick="openImageModal(this.src)"
+          class="w-full h-auto max-h-80 object-cover cursor-pointer hover:opacity-95 transition"
+          title="คลิกเพื่อดูภาพขนาดเต็ม"
+          loading="lazy"
+        >
+      </div>
     {% endif %}
 
     <!-- Footer & Like Button -->
@@ -415,8 +480,9 @@
     if (!mapInitialized) {
       initLeafletMap();
       mapInitialized = true;
+      setTimeout(() => { if (map) map.invalidateSize(); }, 200);
     } else {
-      setTimeout(() => { map.invalidateSize(); }, 200);
+      setTimeout(() => { if (map) map.invalidateSize(); }, 200);
     }
   });
 
@@ -492,5 +558,39 @@
       }
     });
   }
+</script>
+
+<script>
+  // === Real-time Client-side Search Filter ===
+  document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById("search-input");
+    const cards = document.querySelectorAll(".place-card");
+    const noResults = document.getElementById("no-results");
+
+    if (!searchInput) return;
+
+    searchInput.addEventListener("input", function (e) {
+      const keyword = e.target.value.trim().toLowerCase();
+      let matchCount = 0;
+
+      cards.forEach((card) => {
+        const name = card.getAttribute("data-name") || "";
+        const desc = card.getAttribute("data-desc") || "";
+
+        if (name.includes(keyword) || desc.includes(keyword)) {
+          card.style.display = "";
+          matchCount++;
+        } else {
+          card.style.display = "none";
+        }
+      });
+
+      if (matchCount === 0 && keyword !== "") {
+        noResults.classList.remove("hidden");
+      } else {
+        noResults.classList.add("hidden");
+      }
+    });
+  });
 </script>
 {% endblock %}

@@ -59,6 +59,16 @@ class Place(models.Model):
         return []
 
     @property
+    def image_url(self):
+        """คืนค่า URL รูปภาพอย่างปลอดภัย หรือ None หากไม่มีรูปภาพ"""
+        if self.image:
+            try:
+                return self.image.url
+            except Exception:
+                return None
+        return None
+
+    @property
     def average_rating(self):
         # ตรวจสอบว่าถูกดึงผ่าน prefetch_related แล้วหรือไม่เพื่อป้องกัน N+1
         if hasattr(self, "_prefetched_objects_cache") and "reviews" in self._prefetched_objects_cache:
@@ -99,6 +109,17 @@ class Bookmark(models.Model):
         return f"{self.user.username} saved {self.place.name}"
 
 
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    class Meta:
+        verbose_name = "แท็กรีวิว"
+        verbose_name_plural = "แท็กรีวิวทั้งหมด"
+
+    def __str__(self):
+        return f"#{self.name}"
+
+
 class Review(models.Model):
     place = models.ForeignKey(
         Place, on_delete=models.CASCADE, related_name="reviews", verbose_name="สถานที่"
@@ -112,6 +133,7 @@ class Review(models.Model):
     image = models.ImageField(
         upload_to="reviews/", blank=True, null=True, verbose_name="รูปภาพประกอบ"
     )
+    tags = models.ManyToManyField(Tag, blank=True, related_name="reviews", verbose_name="แท็กรีวิว")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -121,6 +143,26 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.place.name} ({self.rating} ดาว)"
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            self.image = optimize_image(self.image)
+        super().save(*args, **kwargs)
+
+
+class ReviewImage(models.Model):
+    review = models.ForeignKey(
+        Review, related_name="images", on_delete=models.CASCADE, verbose_name="รีวิว"
+    )
+    image = models.ImageField(upload_to="reviews/", verbose_name="รูปภาพประกอบ")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "รูปภาพรีวิว"
+        verbose_name_plural = "รูปภาพรีวิวทั้งหมด"
+
+    def __str__(self):
+        return f"Image for {self.review.place.name} by {self.review.user.username}"
 
     def save(self, *args, **kwargs):
         if self.image:
