@@ -203,13 +203,35 @@
               <img src="{{ review.user.profile.avatar_url }}" class="w-8 h-8 rounded-full object-cover border border-amber-100 shadow-sm hover:opacity-80 transition">
             </a>
             <div>
-              <h4 class="text-sm font-semibold text-gray-900 hover:text-amber-600 transition">
-                <a href="{% url 'user_profile' review.user.username %}">{{ review.user.username }}</a>
-              </h4>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <h4 class="text-sm font-semibold text-gray-900 hover:text-amber-600 transition">
+                  <a href="{% url 'user_profile' review.user.username %}">{{ review.user.username }}</a>
+                </h4>
+                {% with badge=review.user.profile.get_active_badge %}
+                  {% if badge %}
+                    <button 
+                      type="button"
+                      onclick="openBadgeModal({
+                        name: '{{ badge.name|escapejs }}',
+                        icon: '{{ badge.icon|escapejs }}',
+                        desc: '{{ badge.desc|escapejs }}',
+                        condition: '{{ badge.condition|escapejs }}',
+                        color: '{{ badge.color|escapejs }}'
+                      })"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border {{ badge.color }} hover:scale-105 transition shadow-2xs cursor-pointer" 
+                      title="คลิกเพื่อดูรายละเอียดเหรียญตรา"
+                    >
+                      <span>{{ badge.icon }}</span>
+                      <span>{{ badge.name }}</span>
+                    </button>
+                  {% endif %}
+                {% endwith %}
+              </div>
               <span class="text-[11px] text-gray-400"
                 >{{ review.created_at|date:"d M Y H:i" }}</span
               >
             </div>
+          </div>
           <div class="flex items-center gap-3">
             <span class="text-amber-500 font-bold text-sm">★ {{ review.rating }}</span>
             {% if review.user == request.user %}

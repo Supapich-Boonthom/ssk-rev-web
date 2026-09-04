@@ -260,9 +260,30 @@
           <img src="{{ review.user.profile.avatar_url }}" class="w-10 h-10 rounded-full object-cover border border-amber-100 shadow-sm hover:opacity-80 transition">
         </a>
         <div>
-          <h3 class="font-bold text-gray-900 text-sm hover:text-amber-600 transition">
-            <a href="{% url 'user_profile' review.user.username %}">{{ review.user.username }}</a>
-          </h3>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <h3 class="font-bold text-gray-900 text-sm hover:text-amber-600 transition">
+              <a href="{% url 'user_profile' review.user.username %}">{{ review.user.username }}</a>
+            </h3>
+            {% with badge=review.user.profile.get_active_badge %}
+              {% if badge %}
+                <button 
+                  type="button"
+                  onclick="openBadgeModal({
+                    name: '{{ badge.name|escapejs }}',
+                    icon: '{{ badge.icon|escapejs }}',
+                    desc: '{{ badge.desc|escapejs }}',
+                    condition: '{{ badge.condition|escapejs }}',
+                    color: '{{ badge.color|escapejs }}'
+                  })"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border {{ badge.color }} hover:scale-105 transition shadow-2xs cursor-pointer" 
+                  title="คลิกเพื่อดูรายละเอียดเหรียญตรา"
+                >
+                  <span>{{ badge.icon }}</span>
+                  <span>{{ badge.name }}</span>
+                </button>
+              {% endif %}
+            {% endwith %}
+          </div>
           <span class="text-xs text-gray-400"
             >{{ review.created_at|date:"d M Y เวลา H:i น." }}</span
           >

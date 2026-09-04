@@ -254,6 +254,50 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal แสดงรายละเอียดเหรียญตราความสำเร็จ (Badge Detail Modal) -->
+    <div id="badge-detail-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-amber-100 transform transition-all relative animate-in fade-in zoom-in-95 duration-150">
+        <!-- ปุ่มปิดมุมขวาบน -->
+        <button type="button" onclick="closeBadgeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition" title="ปิด">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <!-- ไอคอนเหรียญขนาดใหญ่ -->
+        <div id="badge-modal-icon-container" class="w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-inner border mb-3 mt-1">
+          <span id="badge-modal-icon">🎖️</span>
+        </div>
+        
+        <!-- ชื่อเหรียญ -->
+        <h3 id="badge-modal-name" class="text-xl font-bold text-gray-800 mb-1">ชื่อเหรียญตรา</h3>
+        
+        <!-- แถบประเภท -->
+        <div class="mb-4">
+          <span id="badge-modal-tag" class="inline-block px-3 py-0.5 rounded-full text-xs font-semibold">
+            🎖️ เหรียญตราความสำเร็จ
+          </span>
+        </div>
+
+        <!-- รายละเอียดและเงื่อนไข -->
+        <div class="bg-amber-50/40 rounded-2xl p-4 mb-5 text-left border border-amber-100/80 space-y-2.5">
+          <div>
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">คำอธิบาย</span>
+            <p id="badge-modal-desc" class="text-xs text-gray-700 font-medium leading-relaxed"></p>
+          </div>
+          <div class="border-t border-amber-100/60 pt-2">
+            <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wider block mb-0.5">🎯 เงื่อนไขการปลดล็อก</span>
+            <p id="badge-modal-condition" class="text-xs text-gray-800 font-semibold leading-relaxed"></p>
+          </div>
+        </div>
+
+        <!-- ปุ่มปิด modal -->
+        <button type="button" onclick="closeBadgeModal()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition shadow-sm hover:shadow">
+          เข้าใจแล้ว
+        </button>
+      </div>
+    </div>
     
     <script>
       // ควบคุม Dropdown ผู้ใช้
@@ -288,6 +332,46 @@
       function closeLogoutModal() {
         document.getElementById('logout-modal').classList.add('hidden');
       }
+
+      // ควบคุม Modal รายละเอียดเหรียญตรา (Badge Detail Modal)
+      function openBadgeModal(badge) {
+        if (!badge) return;
+        const modal = document.getElementById('badge-detail-modal');
+        const icon = document.getElementById('badge-modal-icon');
+        const iconContainer = document.getElementById('badge-modal-icon-container');
+        const name = document.getElementById('badge-modal-name');
+        const desc = document.getElementById('badge-modal-desc');
+        const condition = document.getElementById('badge-modal-condition');
+        const tag = document.getElementById('badge-modal-tag');
+
+        if (icon) icon.textContent = badge.icon || '🎖️';
+        if (name) name.textContent = badge.name || '';
+        if (desc) desc.textContent = badge.desc || '';
+        if (condition) condition.textContent = badge.condition || badge.desc || '';
+
+        if (iconContainer && badge.color) {
+          iconContainer.className = 'w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-inner border mb-3 mt-1 ' + badge.color;
+        }
+        if (tag && badge.color) {
+          tag.className = 'inline-block px-3 py-0.5 rounded-full text-xs font-semibold ' + badge.color;
+          tag.textContent = badge.name ? ('🎖️ ' + badge.name) : '🎖️ เหรียญตราความสำเร็จ';
+        }
+
+        if (modal) {
+          modal.classList.remove('hidden');
+        }
+      }
+
+      function closeBadgeModal() {
+        const modal = document.getElementById('badge-detail-modal');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      document.getElementById('badge-detail-modal')?.addEventListener('click', (e) => {
+        if (e.target === document.getElementById('badge-detail-modal')) {
+          closeBadgeModal();
+        }
+      });
     </script>
   </body>
 </html>

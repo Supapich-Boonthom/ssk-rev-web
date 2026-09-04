@@ -35,7 +35,28 @@
           alt="{{ request.user.username }}" 
           class="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-amber-100 shadow-sm transition-all"
         >
-        <h2 class="text-xl font-bold text-gray-800">{{ request.user.username }}</h2>
+        <div class="flex items-center justify-center gap-2 flex-wrap mb-1">
+          <h2 class="text-xl font-bold text-gray-800">{{ request.user.username }}</h2>
+          {% with active_badge=profile.get_active_badge %}
+            {% if active_badge %}
+              <button 
+                type="button"
+                onclick="openBadgeModal({
+                  name: '{{ active_badge.name|escapejs }}',
+                  icon: '{{ active_badge.icon|escapejs }}',
+                  desc: '{{ active_badge.desc|escapejs }}',
+                  condition: '{{ active_badge.condition|escapejs }}',
+                  color: '{{ active_badge.color|escapejs }}'
+                })"
+                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border {{ active_badge.color }} hover:scale-105 transition cursor-pointer shadow-2xs" 
+                title="คลิกเพื่อดูรายละเอียดเหรียญตรา"
+              >
+                <span>{{ active_badge.icon }}</span>
+                <span>{{ active_badge.name }}</span>
+              </button>
+            {% endif %}
+          {% endwith %}
+        </div>
         <p class="text-xs text-gray-500 mb-6">{{ request.user.email }}</p>
 
         <!-- แถบสรุปสถิติย่อ -->
@@ -81,22 +102,66 @@
       
       <!-- โซนเหรียญตราความสำเร็จ (Badges) -->
       <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100">
-        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span>🎖️</span> เหรียญตราความสำเร็จ ({{ badges|length }})
-        </h3>
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+            <span>🎖️</span> เหรียญตราความสำเร็จ ({{ badges|length }})
+          </h3>
+          {% if badges %}
+            <span class="text-xs text-gray-400">💡 คลิกเลือกเหรียญเพื่อแสดงข้างชื่อของคุณ</span>
+          {% endif %}
+        </div>
         
         {% if badges %}
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {% for badge in badges %}
-              <div class="flex items-center gap-3 p-3.5 rounded-2xl border {{ badge.color }}">
-                <span class="text-3xl">{{ badge.icon }}</span>
-                <div>
-                  <h4 class="font-bold text-sm text-gray-800">{{ badge.name }}</h4>
-                  <p class="text-xs text-gray-500">{{ badge.desc }}</p>
-                </div>
-              </div>
-            {% endfor %}
-          </div>
+          <form method="POST" action="{% url 'set_featured_badge' %}">
+            {% csrf_token %}
+            {% with active_badge=profile.get_active_badge %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {% for badge in badges %}
+                <label class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition hover:shadow-md {% if active_badge.name == badge.name %}ring-2 ring-amber-400 shadow-sm {{ badge.color }}{% else %}{{ badge.color }} opacity-85 hover:opacity-100{% endif %}">
+                  <div class="flex items-center gap-3">
+                    <span class="text-3xl">{{ badge.icon }}</span>
+                    <div>
+                      <div class="flex items-center gap-1.5">
+                        <h4 class="font-bold text-sm text-gray-800">{{ badge.name }}</h4>
+                        {% if active_badge.name == badge.name %}
+                          <span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">เหรียญหลัก</span>
+                        {% endif %}
+                      </div>
+                      <p class="text-xs text-gray-500">{{ badge.desc }}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button 
+                      type="button" 
+                      onclick="event.preventDefault(); event.stopPropagation(); openBadgeModal({
+                        name: '{{ badge.name|escapejs }}',
+                        icon: '{{ badge.icon|escapejs }}',
+                        desc: '{{ badge.desc|escapejs }}',
+                        condition: '{{ badge.condition|escapejs }}',
+                        color: '{{ badge.color|escapejs }}'
+                      })"
+                      class="p-1.5 text-gray-400 hover:text-amber-600 rounded-xl hover:bg-black/5 transition"
+                      title="คลิกเพื่อดูรายละเอียดและเงื่อนไข"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke-width="2"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16v-4m0-4h.01"/>
+                      </svg>
+                    </button>
+                    <input 
+                      type="radio" 
+                      name="badge_name" 
+                      value="{{ badge.name }}" 
+                      onchange="this.form.submit()"
+                      {% if active_badge.name == badge.name %}checked{% endif %}
+                      class="w-4 h-4 text-amber-500 focus:ring-amber-400 cursor-pointer accent-amber-500"
+                    >
+                  </div>
+                </label>
+              {% endfor %}
+            </div>
+            {% endwith %}
+          </form>
         {% else %}
           <div class="bg-amber-50/60 rounded-2xl p-4 text-center text-xs text-amber-700 border border-amber-100">
             🌱 ยังไม่มีเหรียญตรา ลองเขียนรีวิวสถานที่แรกเพื่อปลดล็อกเหรียญตรานักสำรวจ!

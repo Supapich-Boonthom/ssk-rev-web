@@ -18,6 +18,7 @@ urlpatterns = [
         name="toggle_bookmark",
     ),
     path("profile/", views.profile_view, name="profile"),
+    path("set-badge/", views.set_featured_badge, name="set_featured_badge"),
     path("user/<str:username>/", views.user_profile_view, name="user_profile"),
     path("review/<int:pk>/delete/", views.delete_review, name="delete_review"),
     path("notification/<int:pk>/read/", views.read_notification, name="read_notification"),

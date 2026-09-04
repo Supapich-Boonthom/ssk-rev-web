@@ -5,6 +5,7 @@ from django.core.exceptions import PermissionDenied
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q, Count
@@ -328,3 +329,25 @@ def read_notification(request, pk):
 def mark_all_notifications_read(request):
     request.user.notifications.filter(is_read=False).update(is_read=True)
     return redirect(request.META.get("HTTP_REFERER", "place_list"))
+
+
+@login_required(login_url="login")
+@require_POST
+def set_featured_badge(request):
+    badge_name = request.POST.get("badge_name", "").strip()
+    profile = request.user.profile
+
+    # ตรวจสอบว่าผู้ใช้มีเหรียญนี้จริงๆ ป้องกันการส่งค่ามั่ว
+    unlocked_badges = [b["name"] for b in profile.get_badges()]
+
+    if badge_name in unlocked_badges:
+        profile.featured_badge = badge_name
+        profile.save()
+        messages.success(request, f"ตั้งค่า '{badge_name}' เป็นเหรียญตราหลักเรียบร้อยแล้ว")
+    elif badge_name == "":
+        profile.featured_badge = None
+        profile.save()
+        messages.success(request, "ยกเลิกเหรียญตราหลักเรียบร้อยแล้ว")
+
+    return redirect(request.META.get("HTTP_REFERER", "profile"))
+
