@@ -19,6 +19,7 @@ from .models import (
     Bookmark,
     Notification,
     Tag,
+    Comment,
 )
 from .forms import (
     RegisterForm,
@@ -71,7 +72,7 @@ def place_list(request):
         reviews_qs = (
             Review.objects.filter(place__is_approved=True)
             .select_related("place", "user__profile")
-            .prefetch_related("images")
+            .prefetch_related("images", "comments__user")
         )
         if feed_filter == "latest":
             recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
@@ -126,7 +127,7 @@ def place_detail(request, pk):
     reviews = (
         place.reviews.annotate(likes_count=Count("likes"))
         .select_related("user__profile")
-        .prefetch_related("tags", "images")
+        .prefetch_related("tags", "images", "comments__user")
         .order_by("-likes_count", "-created_at")
     )
     form = ReviewForm()
@@ -213,6 +214,30 @@ def toggle_like_review(request, review_id):
                 link=f"/place/{review.place.pk}/",
             )
 
+    return redirect(request.META.get("HTTP_REFERER", "place_list"))
+
+
+@login_required(login_url="login")
+def add_comment(request, review_id):
+    if request.method == "POST":
+        review = get_object_or_404(Review, id=review_id)
+        content = request.POST.get("content", "").strip()
+        if content:
+            content = mask_profanity(content)
+            Comment.objects.create(
+                review=review,
+                user=request.user,
+                content=content,
+            )
+            # แจ้งเตือนเจ้าของรีวิว (หากไม่ใช่คนคอมเมนต์เอง)
+            if review.user != request.user:
+                Notification.objects.create(
+                    user=review.user,
+                    title="มีความคิดเห็นใหม่ในรีวิวของคุณ 💬",
+                    message=f"{request.user.username} แสดงความคิดเห็นในรีวิวของคุณที่ '{review.place.name}': {content[:40]}",
+                    link=f"/place/{review.place.pk}/",
+                )
+            messages.success(request, "ส่งความคิดเห็นเรียบร้อยแล้ว")
     return redirect(request.META.get("HTTP_REFERER", "place_list"))
 
 

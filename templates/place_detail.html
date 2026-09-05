@@ -429,6 +429,131 @@
           />
         </div>
         {% endif %}
+
+        <!-- แถบล่างไอคอนมินิมอล: หัวใจ, คอมเมนต์, แชร์สากล -->
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-gray-500">
+          <div class="flex items-center gap-5 text-xs">
+            <!-- ปุ่มมีประโยชน์: ถ้า 0 ซ่อนเลข / ถ้ามีคนกดค่อยโชว์ตัวเลขสีแดง -->
+            <a href="{% url 'toggle_like' review.id %}" 
+               class="inline-flex items-center gap-1.5 hover:text-rose-600 transition group cursor-pointer"
+               title="มีประโยชน์">
+              <svg class="w-4 h-4 {% if review.likes_count > 0 %}text-rose-500 fill-current{% else %}text-gray-400 group-hover:text-rose-500{% endif %} transition" 
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              {% if review.likes_count > 0 %}
+                <span class="font-semibold text-rose-600">{{ review.likes_count }}</span>
+              {% endif %}
+            </a>
+
+            <!-- ปุ่มความคิดเห็น: ถ้า 0 ซ่อนเลข / ถ้ามีคอมเมนต์ค่อยโชว์ตัวเลข -->
+            <button type="button" 
+                    onclick="document.getElementById('comment-modal-{{ review.id }}').classList.remove('hidden')"
+                    class="inline-flex items-center gap-1.5 hover:text-amber-600 transition group cursor-pointer"
+                    title="ความคิดเห็น">
+              <svg class="w-4 h-4 text-gray-400 group-hover:text-amber-500 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              {% if review.comments.count > 0 %}
+                <span class="font-medium text-gray-600 group-hover:text-amber-600">{{ review.comments.count }}</span>
+              {% endif %}
+            </button>
+
+            <!-- ปุ่มแชร์: ใช้ SVG 3 จุดเชื่อมแบบในรูป คลีนๆ ไม่มีกรอบวงกลมหนา -->
+            <button type="button" 
+                    onclick="navigator.clipboard.writeText(window.location.href); alert('คัดลอกลิงก์เรียบร้อยแล้ว!');"
+                    class="inline-flex items-center text-gray-400 hover:text-amber-600 transition cursor-pointer" 
+                    title="แชร์">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- หน้าต่างการ์ดลอย (Modal) -->
+        <div id="comment-modal-{{ review.id }}" 
+             class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4"
+             onclick="if(event.target === this) this.classList.add('hidden')">
+          
+          <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl flex flex-col max-h-[80vh] overflow-hidden" onclick="event.stopPropagation()">
+            
+            <!-- ส่วนหัว -->
+            <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-gray-900 text-sm">ความคิดเห็น</span>
+                <span class="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold">
+                  {{ review.comments.count }}
+                </span>
+              </div>
+              <button type="button" 
+                      onclick="document.getElementById('comment-modal-{{ review.id }}').classList.add('hidden')"
+                      class="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition cursor-pointer">
+                ✕
+              </button>
+            </div>
+
+            <!-- รายการคอมเมนต์ -->
+            <div class="p-5 overflow-y-auto space-y-3.5 flex-1">
+              {% for comment in review.comments.all %}
+                <div class="flex items-start gap-3">
+                  <!-- วงกลมตัวย่อชื่อแบบ AD admin -->
+                  <div class="w-8 h-8 rounded-full bg-amber-500/10 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0 uppercase">
+                    {{ comment.user.username|slice:":2" }}
+                  </div>
+
+                  <div class="flex-1 bg-gray-50 rounded-2xl px-3.5 py-2.5">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="font-bold text-gray-900 text-xs">{{ comment.user.username }}</span>
+                      
+                      <!-- ป้ายเจ้าของโพสต์ -->
+                      {% if comment.user == review.user %}
+                        <span class="bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                          เจ้าของโพสต์
+                        </span>
+                      {% endif %}
+
+                      <span class="text-[10px] text-gray-400 ml-auto">{{ comment.created_at|timesince }} ที่แล้ว</span>
+                    </div>
+                    <p class="text-xs text-gray-700 break-words leading-relaxed">{{ comment.content }}</p>
+                  </div>
+                </div>
+              {% empty %}
+                <p class="text-center py-8 text-gray-400 text-xs">ยังไม่มีความคิดเห็น มาพูดคุยกันได้นะ</p>
+              {% endfor %}
+            </div>
+
+            <!-- ฟอร์มพิมพ์ส่ง -->
+            <div class="p-4 border-t border-gray-100 bg-white">
+              {% if user.is_authenticated %}
+                <form action="{% url 'add_comment' review.id %}" method="POST" class="flex items-center gap-2 m-0">
+                  {% csrf_token %}
+                  <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold shrink-0 uppercase">
+                    {{ user.username|slice:":2" }}
+                  </div>
+                  <input type="text" 
+                         name="content" 
+                         placeholder="พิมพ์ข้อความพูดคุย..." 
+                         required
+                         class="flex-1 text-xs bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 outline-none focus:border-amber-500 focus:bg-white transition">
+                  <button type="submit" 
+                          class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-xl transition shrink-0 cursor-pointer">
+                    ส่ง
+                  </button>
+                </form>
+              {% else %}
+                <p class="text-center text-xs text-gray-400">
+                  กรุณา <a href="{% url 'login' %}?next={{ request.get_full_path }}" class="text-amber-600 font-semibold hover:underline">เข้าสู่ระบบ</a> ก่อนร่วมพูดคุย
+                </p>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
       </div>
       {% empty %}
       <p class="text-center text-gray-400 py-8 text-sm">

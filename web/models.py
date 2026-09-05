@@ -349,6 +349,19 @@ class Notification(models.Model):
         return f"Notification for {self.user.username}: {self.title}"
 
 
+class Comment(models.Model):
+    review = models.ForeignKey('Review', on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField(verbose_name="ข้อความ")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.content[:20]}"
+
+
 @receiver(post_save, sender=User)
 def create_or_save_user_profile(sender, instance, created, **kwargs):
     if created:

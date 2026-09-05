@@ -25,4 +25,5 @@ urlpatterns = [
     path("notification/<int:pk>/read/", views.read_notification, name="read_notification"),
     path("notifications/mark-all-read/", views.mark_all_notifications_read, name="mark_all_read"),
     path("review/quick/", views.quick_review, name="quick_review"),
+    path("review/<int:review_id>/comment/", views.add_comment, name="add_comment"),
 ]

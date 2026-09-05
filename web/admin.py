@@ -8,6 +8,7 @@ from .models import (
     Profile,
     Notification,
     Tag,
+    Comment,
 )
 
 
@@ -76,3 +77,9 @@ class NotificationAdmin(admin.ModelAdmin):
     list_display = ("user", "title", "is_read", "created_at")
     list_filter = ("is_read", "created_at")
     search_fields = ("user__username", "title", "message")
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ("user", "review", "content", "created_at")
+    search_fields = ("user__username", "content", "review__place__name")
