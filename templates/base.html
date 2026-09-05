@@ -57,7 +57,7 @@
               </span>
             </a>
           </div>
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2 sm:gap-4">
             {% if user.is_authenticated %}
             <!-- ปุ่มรูประฆังพร้อม Dropdown -->
             <div class="relative">
@@ -149,27 +149,30 @@
             </div>
 
             <!-- เมนูโปรไฟล์ผู้ใช้ -->
-            <div class="relative flex items-center gap-2">
-              <!-- จุดที่ 2: คลิกที่รูปโปรไฟล์ / วงกลม เพื่อไปหน้าโปรไฟล์ทันที -->
-              <a href="{% url 'profile' %}" 
-                 class="w-8 h-8 rounded-full overflow-hidden bg-amber-500 text-white flex items-center justify-center text-xs font-bold uppercase hover:opacity-90 hover:ring-2 hover:ring-amber-300 transition shrink-0 shadow-sm" 
-                 title="ดูโปรไฟล์">
-                {% if user.profile.avatar %}
-                  <img src="{{ user.profile.avatar_url }}" alt="{{ user.username }}" class="w-full h-full object-cover" />
-                {% else %}
-                  {{ user.username|slice:":2" }}
-                {% endif %}
-              </a>
-
-              <!-- คลิกที่ชื่อหรือลูกศรเพื่อเปิดดรอปดาวน์ -->
+            <div class="relative">
               <button
                 id="user-menu-btn"
                 type="button"
-                class="inline-flex items-center gap-1.5 font-bold text-gray-800 text-sm hover:text-amber-600 transition cursor-pointer py-1"
+                class="flex items-center gap-1.5 focus:outline-none hover:opacity-95 transition cursor-pointer p-1 rounded-full hover:bg-amber-50/50"
+                title="เมนูผู้ใช้"
               >
-                <span>{{ user.username }}</span>
+                <!-- รูปโปรไฟล์: แสดงทุกขนาดหน้าจอ -->
+                <div class="w-8 h-8 rounded-full overflow-hidden bg-amber-500 text-white flex items-center justify-center text-xs font-bold uppercase shrink-0 shadow-sm border border-amber-200">
+                  {% if user.profile.avatar %}
+                    <img src="{{ user.profile.avatar_url }}" alt="{{ user.username }}" class="w-full h-full object-cover" />
+                  {% else %}
+                    {{ user.username|slice:":2" }}
+                  {% endif %}
+                </div>
+
+                <!-- ชื่อผู้ใช้: ซ่อนบนมือถือ และโชว์ตั้งแต่จอ sm ขึ้นไป -->
+                <span class="hidden sm:inline text-xs font-semibold text-gray-800 max-w-[100px] truncate">
+                  {{ user.username }}
+                </span>
+
+                <!-- ลูกศรชี้ลง: ซ่อนบนมือถือเหมือนกัน -->
                 <svg
-                  class="w-3.5 h-3.5 text-gray-500"
+                  class="hidden sm:inline w-3.5 h-3.5 text-gray-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
