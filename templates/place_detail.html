@@ -417,13 +417,13 @@
 
         {% if review.images.all %}
           {% if review.images.all|length == 1 %}
-          <div class="mt-3 overflow-hidden rounded-2xl border border-gray-100 max-w-lg bg-gray-50">
+          <div class="mt-3 w-full max-h-96 overflow-hidden rounded-2xl border border-gray-100 max-w-lg bg-gray-50 flex items-center justify-center">
             {% for img_obj in review.images.all %}
             <img
               src="{{ img_obj.image.url }}"
               alt="รูปรีวิว"
               onclick="openImageModal(this.src)"
-              class="w-full aspect-video object-cover cursor-pointer hover:opacity-95 transition"
+              class="w-full h-full max-h-96 object-cover cursor-pointer hover:opacity-95 transition"
               title="คลิกเพื่อดูภาพขนาดเต็ม"
               loading="lazy"
             />
@@ -448,12 +448,12 @@
           </div>
           {% endif %}
         {% elif review.image %}
-        <div class="mt-3 overflow-hidden rounded-2xl border border-gray-100 max-w-lg bg-gray-50">
+        <div class="mt-3 w-full max-h-96 overflow-hidden rounded-2xl border border-gray-100 max-w-lg bg-gray-50 flex items-center justify-center">
           <img
             src="{{ review.image.url }}"
             alt="รูปรีวิว"
             onclick="openImageModal(this.src)"
-            class="w-full aspect-video object-cover cursor-pointer hover:opacity-95 transition"
+            class="w-full h-full max-h-96 object-cover cursor-pointer hover:opacity-95 transition"
             title="คลิกเพื่อดูภาพขนาดเต็ม"
             loading="lazy"
           />
