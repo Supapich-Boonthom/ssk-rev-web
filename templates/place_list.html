@@ -78,15 +78,7 @@
       <span>ที่บันทึกไว้</span>
     </a>
 
-    <!-- 3. คาเฟ่ / ร้านอาหาร -->
-    <a
-      href="?category=cafe{% if query %}&q={{ query }}{% endif %}"
-      class="px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition {% if request.GET.category == 'cafe' %}bg-gray-900 text-white shadow-sm{% else %}bg-white text-gray-600 hover:bg-gray-50 border border-gray-200{% endif %}"
-    >
-      คาเฟ่ / ร้านอาหาร
-    </a>
-
-    <!-- 4. ธรรมชาติ / สวนสาธารณะ -->
+    <!-- 3. ธรรมชาติ / สวนสาธารณะ -->
     <a
       href="?category=nature{% if query %}&q={{ query }}{% endif %}"
       class="px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition {% if request.GET.category == 'nature' %}bg-gray-900 text-white shadow-sm{% else %}bg-white text-gray-600 hover:bg-gray-50 border border-gray-200{% endif %}"
@@ -94,7 +86,7 @@
       ธรรมชาติ / สวนสาธารณะ
     </a>
 
-    <!-- 5. วัด / โบราณสถาน -->
+    <!-- 4. วัด / โบราณสถาน -->
     <a
       href="?category=temple{% if query %}&q={{ query }}{% endif %}"
       class="px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition {% if request.GET.category == 'temple' %}bg-gray-900 text-white shadow-sm{% else %}bg-white text-gray-600 hover:bg-gray-50 border border-gray-200{% endif %}"
@@ -102,7 +94,7 @@
       วัด / โบราณสถาน
     </a>
 
-    <!-- 6. พิพิธภัณฑ์ / แหล่งเรียนรู้ -->
+    <!-- 5. พิพิธภัณฑ์ / แหล่งเรียนรู้ -->
     <a
       href="?category=learning{% if query %}&q={{ query }}{% endif %}"
       class="px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition {% if request.GET.category == 'learning' %}bg-gray-900 text-white shadow-sm{% else %}bg-white text-gray-600 hover:bg-gray-50 border border-gray-200{% endif %}"
@@ -110,12 +102,20 @@
       พิพิธภัณฑ์ / แหล่งเรียนรู้
     </a>
 
-    <!-- 7. ตลาด / ถนนคนเดิน -->
+    <!-- 6. ตลาด / ถนนคนเดิน -->
     <a
       href="?category=market{% if query %}&q={{ query }}{% endif %}"
       class="px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition {% if request.GET.category == 'market' %}bg-gray-900 text-white shadow-sm{% else %}bg-white text-gray-600 hover:bg-gray-50 border border-gray-200{% endif %}"
     >
       ตลาด / ถนนคนเดิน
+    </a>
+
+    <!-- 7. คาเฟ่ / ร้านอาหาร -->
+    <a
+      href="?category=cafe{% if query %}&q={{ query }}{% endif %}"
+      class="px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition {% if request.GET.category == 'cafe' %}bg-gray-900 text-white shadow-sm{% else %}bg-white text-gray-600 hover:bg-gray-50 border border-gray-200{% endif %}"
+    >
+      คาเฟ่ / ร้านอาหาร
     </a>
 
     <!-- 8. อื่นๆ -->
