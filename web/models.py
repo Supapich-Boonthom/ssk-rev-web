@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Count, Q
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models.signals import post_save
@@ -8,8 +9,9 @@ from .utils import optimize_image
 
 CATEGORY_CHOICES = [
     ("cafe", "คาเฟ่ / ร้านอาหาร"),
+    ("temple", "วัด / โบราณสถาน"),
     ("nature", "ธรรมชาติ / สวนสาธารณะ"),
-    ("temple", "วัด / วัฒนธรรม"),
+    ("learning", "พิพิธภัณฑ์ / แหล่งเรียนรู้"),
     ("market", "ตลาด / ถนนคนเดิน"),
     ("other", "อื่นๆ"),
 ]
@@ -43,6 +45,15 @@ class Place(models.Model):
         null=True,
         verbose_name="แท็กไฮไลต์ (คั่นด้วยจุลภาค)",
         help_text="เช่น มีที่จอดรถ, ถ่ายรูปสวย, เปิดดึก, ห้องแอร์",
+    )
+    opening_hours = models.CharField(
+        max_length=150, blank=True, null=True, verbose_name="เวลาทำการ"
+    )
+    admission_fee = models.CharField(
+        max_length=100, blank=True, null=True, verbose_name="ค่าเข้าชม"
+    )
+    contact = models.CharField(
+        max_length=100, blank=True, null=True, verbose_name="ติดต่อ"
     )
 
     class Meta:
@@ -235,89 +246,108 @@ class Profile(models.Model):
 
     def get_active_badge(self):
         """ดึงเฉพาะเหรียญที่เลือกมาโชว์ หากไม่มีหรือยังไม่เลือก ให้ดึงเหรียญล่าสุด"""
+        if hasattr(self, "_cached_active_badge"):
+            return self._cached_active_badge
+
         all_badges = self.get_badges()
         if not all_badges:
+            self._cached_active_badge = None
             return None
         if self.featured_badge:
             for b in all_badges:
-                if b['name'] == self.featured_badge:
+                if b["name"] == self.featured_badge:
+                    self._cached_active_badge = b
                     return b
-        return all_badges[-1]
+        badge = all_badges[-1]
+        self._cached_active_badge = badge
+        return badge
 
     def get_badges(self):
-        """คำนวณเหรียญตราที่ได้รับตามเงื่อนไข"""
+        """คำนวณเหรียญตราที่ได้รับตามเงื่อนไข (พร้อม In-Memory Cache)"""
+        if hasattr(self, "_cached_badges"):
+            return self._cached_badges
+
+        stats = self.user.review_set.aggregate(
+            total=Count("id"),
+            cafe=Count("id", filter=Q(place__category="cafe")),
+            temple=Count("id", filter=Q(place__category="temple")),
+        )
+        total_reviews = stats["total"] or 0
+        cafe_reviews = stats["cafe"] or 0
+        temple_reviews = stats["temple"] or 0
+        total_likes = self.total_likes_received()
+
         badges = []
-        reviews = self.user.review_set.all()
-        total_reviews = reviews.count()
-        
+
         # 1. นักรีวิวมือใหม่
         if total_reviews >= 1:
             badges.append({
-                'name': 'นักรีวิวมือใหม่',
-                'icon': '🌱',
-                'desc': 'เขียนรีวิวแรกบน Sisaket Reviews',
-                'condition': 'เขียนรีวิวสถานที่บนเว็บไซต์อย่างน้อย 1 ครั้ง',
-                'color': 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                "name": "นักรีวิวมือใหม่",
+                "icon": "🌱",
+                "desc": "เขียนรีวิวแรกบน Sisaket Reviews",
+                "condition": "เขียนรีวิวสถานที่บนเว็บไซต์อย่างน้อย 1 ครั้ง",
+                "color": "bg-emerald-50 text-emerald-700 border-emerald-200",
             })
-            
+
         # 2. กูรูคาเฟ่
-        cafe_reviews = reviews.filter(place__category='cafe').count()
         if cafe_reviews >= 3:
             badges.append({
-                'name': 'กูรูคาเฟ่',
-                'icon': '☕',
-                'desc': 'รีวิวคาเฟ่และร้านอาหารครบ 3 แห่ง',
-                'condition': 'เขียนรีวิวสถานที่หมวดหมู่คาเฟ่และร้านอาหารครบ 3 แห่ง',
-                'color': 'bg-amber-50 text-amber-700 border-amber-200'
+                "name": "กูรูคาเฟ่",
+                "icon": "☕",
+                "desc": "รีวิวคาเฟ่และร้านอาหารครบ 3 แห่ง",
+                "condition": "เขียนรีวิวสถานที่หมวดหมู่คาเฟ่และร้านอาหารครบ 3 แห่ง",
+                "color": "bg-amber-50 text-amber-700 border-amber-200",
             })
 
         # 3. สายบุญ & วัฒนธรรม
-        temple_reviews = reviews.filter(place__category='temple').count()
         if temple_reviews >= 2:
             badges.append({
-                'name': 'สายวัฒนธรรม',
-                'icon': '🏛️',
-                'desc': 'รีวิวสถานที่ท่องเที่ยวเชิงวัฒนธรรมครบ 2 แห่ง',
-                'condition': 'เขียนรีวิวสถานที่หมวดหมู่วัดและวัฒนธรรมครบ 2 แห่ง',
-                'color': 'bg-purple-50 text-purple-700 border-purple-200'
+                "name": "สายวัฒนธรรม",
+                "icon": "🏛️",
+                "desc": "รีวิวสถานที่ท่องเที่ยวเชิงวัฒนธรรมครบ 2 แห่ง",
+                "condition": "เขียนรีวิวสถานที่หมวดหมู่วัดและวัฒนธรรมครบ 2 แห่ง",
+                "color": "bg-purple-50 text-purple-700 border-purple-200",
             })
 
         # 4. เด็กถิ่นศรีสะเกษ
         if total_reviews >= 5:
             badges.append({
-                'name': 'เด็กถิ่นศรีสะเกษ',
-                'icon': '🏆',
-                'desc': 'รีวิวสถานที่รวมครบ 5 แห่ง',
-                'condition': 'เขียนรีวิวสถานที่รวมทั้งหมดครบ 5 แห่ง',
-                'color': 'bg-orange-50 text-orange-700 border-orange-200'
+                "name": "เด็กถิ่นศรีสะเกษ",
+                "icon": "🏆",
+                "desc": "รีวิวสถานที่รวมครบ 5 แห่ง",
+                "condition": "เขียนรีวิวสถานที่รวมทั้งหมดครบ 5 แห่ง",
+                "color": "bg-orange-50 text-orange-700 border-orange-200",
             })
 
         # 5. ไทศรีสะเกษตัวจริง
         if total_reviews >= 10:
             badges.append({
-                'name': 'ไทศรีสะเกษตัวจริง',
-                'icon': '👑',
-                'desc': 'รีวิวสถานที่รวมครบ 10 ครั้งขึ้นไป',
-                'condition': 'เขียนรีวิวสถานที่รวมทั้งหมดครบ 10 ครั้งขึ้นไป',
-                'color': 'bg-yellow-50 text-yellow-800 border-yellow-300'
+                "name": "ไทศรีสะเกษตัวจริง",
+                "icon": "👑",
+                "desc": "รีวิวสถานที่รวมครบ 10 ครั้งขึ้นไป",
+                "condition": "เขียนรีวิวสถานที่รวมทั้งหมดครบ 10 ครั้งขึ้นไป",
+                "color": "bg-yellow-50 text-yellow-800 border-yellow-300",
             })
 
         # 6. ขวัญใจชาวศรีสะเกษ
-        total_likes = self.total_likes_received()
         if total_likes >= 10:
             badges.append({
-                'name': 'ขวัญใจชาวศรีสะเกษ',
-                'icon': '❤️',
-                'desc': 'ได้รับยอดไลก์สะสมจากรีวิวทั้งหมดครบ 10 ไลก์',
-                'condition': 'ได้รับยอดกดถูกใจ (Like) สะสมจากรีวิวทั้งหมดครบ 10 ไลก์',
-                'color': 'bg-rose-50 text-rose-700 border-rose-200'
+                "name": "ขวัญใจชาวศรีสะเกษ",
+                "icon": "❤️",
+                "desc": "ได้รับยอดไลก์สะสมจากรีวิวทั้งหมดครบ 10 ไลก์",
+                "condition": "ได้รับยอดกดถูกใจ (Like) สะสมจากรีวิวทั้งหมดครบ 10 ไลก์",
+                "color": "bg-rose-50 text-rose-700 border-rose-200",
             })
 
+        self._cached_badges = badges
         return badges
 
     def total_likes_received(self):
-        """นับยอดไลก์สะสมจากทุกรีวิวที่ผู้ใช้คนนี้เขียน"""
-        total = sum(review.likes.count() for review in self.user.review_set.all())
+        """นับยอดไลก์สะสมจากทุกรีวิวที่ผู้ใช้คนนี้เขียน (Query เดียวตรงจาก ReviewLike)"""
+        if hasattr(self, "_cached_total_likes"):
+            return self._cached_total_likes
+        total = ReviewLike.objects.filter(review__user=self.user).count()
+        self._cached_total_likes = total
         return total
 
     def __str__(self):
@@ -337,6 +367,19 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.username}: {self.title}"
+
+
+class Comment(models.Model):
+    review = models.ForeignKey('Review', on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField(verbose_name="ข้อความ")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.content[:20]}"
 
 
 @receiver(post_save, sender=User)

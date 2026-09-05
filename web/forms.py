@@ -11,6 +11,9 @@ class PlaceForm(forms.ModelForm):
             "name",
             "category",
             "address",
+            "opening_hours",
+            "admission_fee",
+            "contact",
             "description",
             "google_maps_url",
             "image",
@@ -31,6 +34,24 @@ class PlaceForm(forms.ModelForm):
                 attrs={
                     "class": "w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-sm",
                     "placeholder": "เช่น อำเภอเมืองศรีสะเกษ, ถนนอุบล",
+                }
+            ),
+            "opening_hours": forms.TextInput(
+                attrs={
+                    "class": "w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-sm",
+                    "placeholder": "เช่น เปิดทุกวัน 08:00 - 18:00 น.",
+                }
+            ),
+            "admission_fee": forms.TextInput(
+                attrs={
+                    "class": "w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-sm",
+                    "placeholder": "เช่น ฟรี, 20 บาท หรือ ผู้ใหญ่ 50 / เด็ก 20",
+                }
+            ),
+            "contact": forms.TextInput(
+                attrs={
+                    "class": "w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none text-sm",
+                    "placeholder": "เช่น 045-xxx-xxx หรือเพจ Facebook",
                 }
             ),
             "google_maps_url": forms.URLInput(

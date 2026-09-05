@@ -19,6 +19,7 @@ from .models import (
     Bookmark,
     Notification,
     Tag,
+    Comment,
 )
 from .forms import (
     RegisterForm,
@@ -30,12 +31,132 @@ from .forms import (
 from .moderation import mask_profanity
 
 
+def prefetch_user_badges(reviews):
+    """
+    ดึงสถิติของ User ทุกคนในลิสต์รีวิวในครั้งเดียว (Bulk Queries)
+    เพื่อใส่ใน _cached_badges และ _cached_active_badge
+    ทำให้ตอน Render ใน Template ไม่เกิดปัญหา N+1 Query
+    """
+    if not reviews:
+        return
+
+    # รวบรวม user_id และ profile ทุกตัวอย่าง (เนื่องจากแต่ละ review มี User/Profile instance แยกกัน)
+    profiles_by_user_id = {}
+    for r in reviews:
+        if hasattr(r, "user") and hasattr(r.user, "profile"):
+            prof = r.user.profile
+            profiles_by_user_id.setdefault(r.user_id, []).append(prof)
+
+    if not profiles_by_user_id:
+        return
+
+    user_ids = list(profiles_by_user_id.keys())
+
+    # Query 1: รวมสถิติจำนวนรีวิว, คาเฟ่, วัด ของแต่ละ User
+    review_stats = (
+        Review.objects.filter(user_id__in=user_ids)
+        .values("user_id")
+        .annotate(
+            total=Count("id"),
+            cafe=Count("id", filter=Q(place__category="cafe")),
+            temple=Count("id", filter=Q(place__category="temple")),
+        )
+    )
+    stats_map = {
+        s["user_id"]: {
+            "total": s["total"] or 0,
+            "cafe": s["cafe"] or 0,
+            "temple": s["temple"] or 0,
+        }
+        for s in review_stats
+    }
+
+    # Query 2: รวมยอดไลก์สะสมของแต่ละ User
+    like_stats = (
+        ReviewLike.objects.filter(review__user_id__in=user_ids)
+        .values("review__user_id")
+        .annotate(total_likes=Count("id"))
+    )
+    likes_map = {l["review__user_id"]: l["total_likes"] or 0 for l in like_stats}
+
+    # ประกอบ Badge ใส่ลงใน profile._cached_badges และ profile._cached_active_badge ทุก instance
+    for uid, profile_list in profiles_by_user_id.items():
+        s = stats_map.get(uid, {"total": 0, "cafe": 0, "temple": 0})
+        total_likes = likes_map.get(uid, 0)
+
+        badges = []
+        if s["total"] >= 1:
+            badges.append({
+                "name": "นักรีวิวมือใหม่",
+                "icon": "🌱",
+                "desc": "เขียนรีวิวแรกบน Sisaket Reviews",
+                "condition": "เขียนรีวิวสถานที่บนเว็บไซต์อย่างน้อย 1 ครั้ง",
+                "color": "bg-emerald-50 text-emerald-700 border-emerald-200",
+            })
+        if s["cafe"] >= 3:
+            badges.append({
+                "name": "กูรูคาเฟ่",
+                "icon": "☕",
+                "desc": "รีวิวคาเฟ่และร้านอาหารครบ 3 แห่ง",
+                "condition": "เขียนรีวิวสถานที่หมวดหมู่คาเฟ่และร้านอาหารครบ 3 แห่ง",
+                "color": "bg-amber-50 text-amber-700 border-amber-200",
+            })
+        if s["temple"] >= 2:
+            badges.append({
+                "name": "สายวัฒนธรรม",
+                "icon": "🏛️",
+                "desc": "รีวิวสถานที่ท่องเที่ยวเชิงวัฒนธรรมครบ 2 แห่ง",
+                "condition": "เขียนรีวิวสถานที่หมวดหมู่วัดและวัฒนธรรมครบ 2 แห่ง",
+                "color": "bg-purple-50 text-purple-700 border-purple-200",
+            })
+        if s["total"] >= 5:
+            badges.append({
+                "name": "เด็กถิ่นศรีสะเกษ",
+                "icon": "🏆",
+                "desc": "รีวิวสถานที่รวมครบ 5 แห่ง",
+                "condition": "เขียนรีวิวสถานที่รวมทั้งหมดครบ 5 แห่ง",
+                "color": "bg-orange-50 text-orange-700 border-orange-200",
+            })
+        if s["total"] >= 10:
+            badges.append({
+                "name": "ไทศรีสะเกษตัวจริง",
+                "icon": "👑",
+                "desc": "รีวิวสถานที่รวมครบ 10 ครั้งขึ้นไป",
+                "condition": "เขียนรีวิวสถานที่รวมทั้งหมดครบ 10 ครั้งขึ้นไป",
+                "color": "bg-yellow-50 text-yellow-800 border-yellow-300",
+            })
+        if total_likes >= 10:
+            badges.append({
+                "name": "ขวัญใจชาวศรีสะเกษ",
+                "icon": "❤️",
+                "desc": "ได้รับยอดไลก์สะสมจากรีวิวทั้งหมดครบ 10 ไลก์",
+                "condition": "ได้รับยอดกดถูกใจ (Like) สะสมจากรีวิวทั้งหมดครบ 10 ไลก์",
+                "color": "bg-rose-50 text-rose-700 border-rose-200",
+            })
+
+        for profile in profile_list:
+            profile._cached_total_likes = total_likes
+            profile._cached_badges = badges
+
+            active_badge = None
+            if badges:
+                if profile.featured_badge:
+                    for b in badges:
+                        if b["name"] == profile.featured_badge:
+                            active_badge = b
+                            break
+                if not active_badge:
+                    active_badge = badges[-1]
+            profile._cached_active_badge = active_badge
+
+
 def place_list(request):
     query = request.GET.get("q", "")
     category = request.GET.get("category", "")
     tab = request.GET.get("tab", "places")
     feed_filter = request.GET.get("sort", "trending")
     selected_filter = request.GET.get("filter", "")
+    saved = request.GET.get("saved", "")
     selected_tag = request.GET.get("tag", "")
 
     places = (
@@ -43,8 +164,10 @@ def place_list(request):
         .annotate(reviews_count=Count("reviews"))
         .prefetch_related("reviews")
     )
-    if selected_filter == "saved" and request.user.is_authenticated:
+    if (selected_filter == "saved" or saved == "true") and request.user.is_authenticated:
         places = places.filter(bookmarked_by__user=request.user)
+    elif saved == "true" and not request.user.is_authenticated:
+        places = places.none()
     elif category:
         places = places.filter(category=category)
 
@@ -68,22 +191,25 @@ def place_list(request):
         reviews_qs = (
             Review.objects.filter(place__is_approved=True)
             .select_related("place", "user__profile")
-            .prefetch_related("images")
+            .prefetch_related("images", "comments__user")
         )
         if feed_filter == "latest":
             recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
                 "-created_at"
-            )
+            )[:30]
         elif feed_filter == "trending":
             one_week_ago = timezone.now() - timedelta(days=7)
             recent_reviews = reviews_qs.annotate(
                 weekly_likes=Count("likes", filter=Q(likes__created_at__gte=one_week_ago)),
                 likes_count=Count("likes"),
-            ).order_by("-weekly_likes", "-created_at")
+            ).order_by("-weekly_likes", "-created_at")[:30]
         else:  # top
             recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
                 "-likes_count", "-created_at"
-            )
+            )[:30]
+
+        recent_reviews = list(recent_reviews)
+        prefetch_user_badges(recent_reviews)
 
     user_liked_review_ids = []
     user_bookmarked_place_ids = []
@@ -120,12 +246,13 @@ def place_detail(request, pk):
     place = get_object_or_404(
         Place.objects.prefetch_related("reviews"), pk=pk
     )
-    reviews = (
+    reviews = list(
         place.reviews.annotate(likes_count=Count("likes"))
         .select_related("user__profile")
-        .prefetch_related("tags", "images")
+        .prefetch_related("tags", "images", "comments__user")
         .order_by("-likes_count", "-created_at")
     )
+    prefetch_user_badges(reviews)
     form = ReviewForm()
 
     user_liked_review_ids = []
@@ -210,6 +337,30 @@ def toggle_like_review(request, review_id):
                 link=f"/place/{review.place.pk}/",
             )
 
+    return redirect(request.META.get("HTTP_REFERER", "place_list"))
+
+
+@login_required(login_url="login")
+def add_comment(request, review_id):
+    if request.method == "POST":
+        review = get_object_or_404(Review, id=review_id)
+        content = request.POST.get("content", "").strip()
+        if content:
+            content = mask_profanity(content)
+            Comment.objects.create(
+                review=review,
+                user=request.user,
+                content=content,
+            )
+            # แจ้งเตือนเจ้าของรีวิว (หากไม่ใช่คนคอมเมนต์เอง)
+            if review.user != request.user:
+                Notification.objects.create(
+                    user=review.user,
+                    title="มีความคิดเห็นใหม่ในรีวิวของคุณ 💬",
+                    message=f"{request.user.username} แสดงความคิดเห็นในรีวิวของคุณที่ '{review.place.name}': {content[:40]}",
+                    link=f"/place/{review.place.pk}/",
+                )
+            messages.success(request, "ส่งความคิดเห็นเรียบร้อยแล้ว")
     return redirect(request.META.get("HTTP_REFERER", "place_list"))
 
 
@@ -350,9 +501,56 @@ def delete_review(request, pk):
         place_pk = review.place.pk
         review.delete()
         messages.success(request, "ลบรีวิวของคุณเรียบร้อยแล้ว")
+        referer = request.META.get("HTTP_REFERER")
+        if referer:
+            return redirect(referer)
         return redirect("place_detail", pk=place_pk)
 
+    referer = request.META.get("HTTP_REFERER")
+    if referer:
+        return redirect(referer)
     return redirect("place_detail", pk=review.place.pk)
+
+
+@login_required(login_url="login")
+def edit_review(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+
+    # ตรวจสอบสิทธิ์: หากไม่ใช่เจ้าของรีวิว ให้ตัดสิทธิ์ด้วย Error 403 ทันที
+    if review.user != request.user:
+        raise PermissionDenied
+
+    if request.method == "POST":
+        rating = request.POST.get("rating")
+        comment = request.POST.get("comment", "").strip()
+
+        if rating:
+            try:
+                review.rating = max(1, min(5, int(rating)))
+            except (ValueError, TypeError):
+                pass
+
+        if comment:
+            review.comment = mask_profanity(comment)
+
+        review.save()
+
+        # แนบรูปเพิ่มเติมหากมีการอัปโหลด
+        images = request.FILES.getlist("upload_images")
+        for img in images:
+            ReviewImage.objects.create(review=review, image=img)
+
+        messages.success(request, "แก้ไขรีวิวของคุณเรียบร้อยแล้ว!")
+        return redirect("place_detail", pk=review.place.pk)
+
+    return render(
+        request,
+        "edit_review.html",
+        {
+            "review": review,
+            "place": review.place,
+        },
+    )
 
 
 @login_required(login_url="login")

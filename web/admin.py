@@ -8,6 +8,7 @@ from .models import (
     Profile,
     Notification,
     Tag,
+    Comment,
 )
 
 
@@ -18,9 +19,18 @@ def approve_places(modeladmin, request, queryset):
 
 @admin.register(Place)
 class PlaceAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "is_approved", "created_by", "created_at")
+    list_display = (
+        "name",
+        "category",
+        "opening_hours",
+        "admission_fee",
+        "contact",
+        "is_approved",
+        "created_by",
+        "created_at",
+    )
     list_filter = ("is_approved", "category")
-    search_fields = ("name", "address")
+    search_fields = ("name", "description", "address", "contact")
     actions = [approve_places]
 
 
@@ -67,3 +77,9 @@ class NotificationAdmin(admin.ModelAdmin):
     list_display = ("user", "title", "is_read", "created_at")
     list_filter = ("is_read", "created_at")
     search_fields = ("user__username", "title", "message")
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ("user", "review", "content", "created_at")
+    search_fields = ("user__username", "content", "review__place__name")
