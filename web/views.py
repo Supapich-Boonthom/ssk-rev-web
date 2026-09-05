@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.utils import timezone
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import login, authenticate, logout
@@ -330,15 +331,26 @@ def add_place_view(request):
     return render(request, "add_place.html", {"form": form})
 
 
-@login_required(login_url="login")
 def toggle_like_review(request, review_id):
+    is_ajax = (
+        request.headers.get("x-requested-with") == "XMLHttpRequest"
+        or "application/json" in request.headers.get("accept", "")
+    )
+    if not request.user.is_authenticated:
+        if is_ajax:
+            return JsonResponse({"status": "unauthenticated", "login_url": "/login/"}, status=401)
+        messages.warning(request, "กรุณาเข้าสู่ระบบก่อนกดถูกใจ")
+        return redirect("login")
+
     review = get_object_or_404(Review, id=review_id)
     like = ReviewLike.objects.filter(review=review, user=request.user).first()
 
     if like:
         like.delete()
+        is_liked = False
     else:
         ReviewLike.objects.create(review=review, user=request.user)
+        is_liked = True
         # สร้างการแจ้งเตือนสำหรับเจ้าของรีวิว (ยกเว้นกดถูกใจรีวิวตัวเอง)
         if review.user != request.user:
             Notification.objects.create(
@@ -347,6 +359,12 @@ def toggle_like_review(request, review_id):
                 message=f"{request.user.username} ถูกใจรีวิวของคุณที่ '{review.place.name}'",
                 link=f"/place/{review.place.pk}/",
             )
+
+    if is_ajax:
+        return JsonResponse({
+            "is_liked": is_liked,
+            "likes_count": review.likes.count(),
+        })
 
     return redirect(request.META.get("HTTP_REFERER", "place_list"))
 
