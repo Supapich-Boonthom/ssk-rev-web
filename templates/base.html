@@ -149,22 +149,27 @@
             </div>
 
             <!-- เมนูโปรไฟล์ผู้ใช้ -->
-            <div class="relative">
+            <div class="relative flex items-center gap-2">
+              <!-- จุดที่ 2: คลิกที่รูปโปรไฟล์ / วงกลม เพื่อไปหน้าโปรไฟล์ทันที -->
+              <a href="{% url 'profile' %}" 
+                 class="w-8 h-8 rounded-full overflow-hidden bg-amber-500 text-white flex items-center justify-center text-xs font-bold uppercase hover:opacity-90 hover:ring-2 hover:ring-amber-300 transition shrink-0 shadow-sm" 
+                 title="ดูโปรไฟล์">
+                {% if user.profile.avatar %}
+                  <img src="{{ user.profile.avatar_url }}" alt="{{ user.username }}" class="w-full h-full object-cover" />
+                {% else %}
+                  {{ user.username|slice:":2" }}
+                {% endif %}
+              </a>
+
+              <!-- คลิกที่ชื่อหรือลูกศรเพื่อเปิดดรอปดาวน์ -->
               <button
                 id="user-menu-btn"
                 type="button"
-                class="flex items-center gap-2 p-1 pl-2 rounded-full hover:bg-amber-50/80 transition border border-transparent hover:border-amber-200"
+                class="inline-flex items-center gap-1.5 font-bold text-gray-800 text-sm hover:text-amber-600 transition cursor-pointer py-1"
               >
-                <img
-                  src="{{ user.profile.avatar_url }}"
-                  class="w-8 h-8 rounded-full object-cover border border-amber-100 shadow-sm"
-                />
-                <span
-                  class="text-xs font-semibold text-gray-700 hidden sm:inline"
-                  >{{ user.username }}</span
-                >
+                <span>{{ user.username }}</span>
                 <svg
-                  class="w-3.5 h-3.5 text-gray-400"
+                  class="w-3.5 h-3.5 text-gray-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -181,14 +186,13 @@
               <!-- Dropdown Menu -->
               <div
                 id="user-dropdown"
-                class="hidden absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-amber-100 py-2 z-50"
+                class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-amber-100 py-2 z-50"
               >
-                <div class="px-4 py-2 border-b border-gray-100">
-                  <p class="text-[10px] text-gray-400">เข้าสู่ระบบในชื่อ</p>
-                  <p class="text-xs font-bold text-gray-800 truncate">
-                    {{ user.username }}
-                  </p>
-                </div>
+                <!-- จุดที่ 1: แทนที่บล็อก 'เข้าสู่ระบบในชื่อ' เดิม ให้คลิกไปหน้าโปรไฟล์ได้ -->
+                <a href="{% url 'profile' %}" class="block px-4 py-3 hover:bg-amber-50/60 transition group border-b border-gray-100">
+                  <span class="block text-[11px] text-gray-400 group-hover:text-amber-600 transition">เข้าสู่ระบบในชื่อ</span>
+                  <span class="block text-sm font-bold text-gray-800 group-hover:text-amber-600 transition">{{ user.username }}</span>
+                </a>
 
                 <a
                   href="{% url 'place_list' %}"
@@ -210,7 +214,7 @@
                 <button
                   type="button"
                   onclick="openLogoutModal()"
-                  class="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 transition text-left"
+                  class="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 transition text-left cursor-pointer"
                 >
                   <span>🚪</span> ออกจากระบบ
                 </button>
@@ -238,33 +242,61 @@
       {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
+   <!-- Footer -->
     <footer
-      class="bg-white border-t border-gray-100 py-6 mt-12 text-center text-xs text-gray-400"
+      class="bg-white border-t border-gray-100 py-6 mt-12 text-center text-xs text-gray-400 space-y-1"
     >
-      © Sisaket Reviews - เว็บรีวิวสถานที่ท่องเที่ยวและคาเฟ่ในตัวจังหวัดศรีสะเกษ
+      <p>© Sisaket Reviews - เว็บรีวิวสถานที่ท่องเที่ยวในตัวจังหวัดศรีสะเกษ</p>
+      <p class="text-[11px] text-gray-400">
+        จัดทำขึ้นเพื่อการศึกษาในรายวิชา ภาพและข้อมูลบางส่วนใช้เพื่อจำลองระบบเท่านั้น (Educational Purpose Only)
+      </p>
     </footer>
     <!-- JavaScript สำหรับคลิกเปิด/ปิด Dropdown -->
     <script>
       const notifBtn = document.getElementById("notif-btn");
       const notifDropdown = document.getElementById("notif-dropdown");
+      const userMenuBtn = document.getElementById("user-menu-btn");
+      const userDropdown = document.getElementById("user-dropdown");
 
       if (notifBtn && notifDropdown) {
         notifBtn.addEventListener("click", (e) => {
           e.stopPropagation();
           notifDropdown.classList.toggle("hidden");
+          if (userDropdown) {
+            userDropdown.classList.add("hidden");
+          }
         });
+      }
 
-        // ปิดเมนูเมื่อคลิกที่อื่นบนหน้าจอ
-        document.addEventListener("click", (e) => {
-          if (
-            !notifDropdown.contains(e.target) &&
-            !notifBtn.contains(e.target)
-          ) {
+      if (userMenuBtn && userDropdown) {
+        userMenuBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          userDropdown.classList.toggle("hidden");
+          if (notifDropdown) {
             notifDropdown.classList.add("hidden");
           }
         });
       }
+
+      // ปิดเมนูเมื่อคลิกที่อื่นบนหน้าจอ
+      document.addEventListener("click", (e) => {
+        if (
+          notifDropdown &&
+          notifBtn &&
+          !notifDropdown.contains(e.target) &&
+          !notifBtn.contains(e.target)
+        ) {
+          notifDropdown.classList.add("hidden");
+        }
+        if (
+          userDropdown &&
+          userMenuBtn &&
+          !userDropdown.contains(e.target) &&
+          !userMenuBtn.contains(e.target)
+        ) {
+          userDropdown.classList.add("hidden");
+        }
+      });
     </script>
 
     <!-- Toast Notification ลอยมุมขวาบน -->
