@@ -1,8 +1,9 @@
-{% extends 'base.html' %}
-
-{% block content %}
+{% extends 'base.html' %} {% block content %}
 <!-- Cropper.js CSS & JS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"
+/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 
 <style>
@@ -14,9 +15,17 @@
 </style>
 
 <div class="max-w-6xl mx-auto px-4 pt-4">
-  <a href="{% url 'place_list' %}" class="inline-flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-amber-600 bg-white hover:bg-amber-50 px-3.5 py-2 rounded-xl border border-gray-200 hover:border-amber-200 transition shadow-sm">
+  <a
+    href="{% url 'place_list' %}"
+    class="inline-flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-amber-600 bg-white hover:bg-amber-50 px-3.5 py-2 rounded-xl border border-gray-200 hover:border-amber-200 transition shadow-sm"
+  >
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M10 19l-7-7m0 0l7-7m-7 7h18"
+      ></path>
     </svg>
     <span>กลับไปหน้าแรก</span>
   </a>
@@ -24,73 +33,97 @@
 
 <div class="max-w-6xl mx-auto px-4 pb-8 pt-4">
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    
     <!-- คอลัมน์ซ้าย: ข้อมูลส่วนตัว & ฟอร์มแก้ไข -->
     <div class="lg:col-span-1">
-      <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100 text-center sticky top-24">
+      <div
+        class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100 text-center sticky top-24"
+      >
         <!-- รูปโปรไฟล์ Avatar -->
-        <img 
+        <img
           id="avatar-preview"
-          src="{{ profile.avatar_url }}" 
-          alt="{{ request.user.username }}" 
+          src="{{ profile.avatar_url }}"
+          alt="{{ request.user.username }}"
           class="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-amber-100 shadow-sm transition-all"
-        >
+        />
         <div class="flex items-center justify-center gap-2 flex-wrap mb-1">
-          <h2 class="text-xl font-bold text-gray-800">{{ request.user.username }}</h2>
-          {% with active_badge=profile.get_active_badge %}
-            {% if active_badge %}
-              <button 
-                type="button"
-                onclick="openBadgeModal({
+          <h2 class="text-xl font-bold text-gray-800">
+            {{ request.user.username }}
+          </h2>
+          {% with active_badge=profile.get_active_badge %} {% if active_badge %}
+          <button
+            type="button"
+            onclick="openBadgeModal({
                   name: '{{ active_badge.name|escapejs }}',
                   icon: '{{ active_badge.icon|escapejs }}',
                   desc: '{{ active_badge.desc|escapejs }}',
                   condition: '{{ active_badge.condition|escapejs }}',
                   color: '{{ active_badge.color|escapejs }}'
                 })"
-                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border {{ active_badge.color }} hover:scale-105 transition cursor-pointer shadow-2xs" 
-                title="คลิกเพื่อดูรายละเอียดเหรียญตรา"
-              >
-                <span>{{ active_badge.icon }}</span>
-                <span>{{ active_badge.name }}</span>
-              </button>
-            {% endif %}
-          {% endwith %}
+            class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border {{ active_badge.color }} hover:scale-105 transition cursor-pointer shadow-2xs"
+            title="คลิกเพื่อดูรายละเอียดเหรียญตรา"
+          >
+            <span>{{ active_badge.icon }}</span>
+            <span>{{ active_badge.name }}</span>
+          </button>
+          {% endif %} {% endwith %}
         </div>
         <p class="text-xs text-gray-500 mb-6">{{ request.user.email }}</p>
 
         <!-- แถบสรุปสถิติย่อ -->
-        <div class="grid grid-cols-2 gap-2 py-3 border-y border-gray-100 mb-6 text-center">
+        <div
+          class="grid grid-cols-2 gap-2 py-3 border-y border-gray-100 mb-6 text-center"
+        >
           <div>
-            <span class="block text-lg font-bold text-amber-600">{{ total_reviews }}</span>
+            <span class="block text-lg font-bold text-amber-600"
+              >{{ total_reviews }}</span
+            >
             <span class="text-xs text-gray-400">รีวิวทั้งหมด</span>
           </div>
           <div>
-            <span class="block text-lg font-bold text-amber-500">{{ badges|length }}</span>
+            <span class="block text-lg font-bold text-amber-500"
+              >{{ badges|length }}</span
+            >
             <span class="text-xs text-gray-400">เหรียญตรา</span>
           </div>
         </div>
 
         <!-- ฟอร์มแก้ไขข้อมูล -->
-        <form method="POST" enctype="multipart/form-data" class="text-left space-y-4">
+        <form
+          method="POST"
+          enctype="multipart/form-data"
+          class="text-left space-y-4"
+        >
           {% csrf_token %}
           <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1">เปลี่ยนรูปโปรไฟล์</label>
-            <input 
-              type="file" 
-              name="avatar" 
-              id="avatar-input" 
-              accept="image/*" 
+            <label class="block text-xs font-bold text-gray-600 mb-1"
+              >เปลี่ยนรูปโปรไฟล์</label
+            >
+            <input
+              type="file"
+              name="avatar"
+              id="avatar-input"
+              accept="image/*"
               class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1"
+              >แนะนำตัวเองสั้นๆ (Bio)</label
+            >
+            <textarea
+              name="bio"
+              rows="3"
+              class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+{{ profile.bio }}</textarea
             >
           </div>
 
-          <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1">แนะนำตัวเองสั้นๆ (Bio)</label>
-            <textarea name="bio" rows="3" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">{{ profile.bio }}</textarea>
-          </div>
-
-          <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-xl transition shadow-sm">
+          <button
+            type="submit"
+            class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-xl transition shadow-sm"
+          >
             บันทึกข้อมูล
           </button>
         </form>
@@ -99,7 +132,6 @@
 
     <!-- คอลัมน์ขวา: เหรียญตรา & ประวัติการรีวิว -->
     <div class="lg:col-span-2 space-y-8">
-      
       <!-- โซนเหรียญตราความสำเร็จ (Badges) -->
       <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100">
         <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -107,157 +139,243 @@
             <span>🎖️</span> เหรียญตราความสำเร็จ ({{ badges|length }})
           </h3>
           {% if badges %}
-            <span class="text-xs text-gray-400">💡 คลิกเลือกเหรียญเพื่อแสดงข้างชื่อของคุณ</span>
+          <span class="text-xs text-gray-400"
+            >💡 คลิกเลือกเหรียญเพื่อแสดงข้างชื่อของคุณ</span
+          >
           {% endif %}
         </div>
-        
+
         {% if badges %}
-          <form method="POST" action="{% url 'set_featured_badge' %}">
-            {% csrf_token %}
-            {% with active_badge=profile.get_active_badge %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {% for badge in badges %}
-                <label class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition hover:shadow-md {% if active_badge.name == badge.name %}ring-2 ring-amber-400 shadow-sm {{ badge.color }}{% else %}{{ badge.color }} opacity-85 hover:opacity-100{% endif %}">
-                  <div class="flex items-center gap-3">
-                    <span class="text-3xl">{{ badge.icon }}</span>
-                    <div>
-                      <div class="flex items-center gap-1.5">
-                        <h4 class="font-bold text-sm text-gray-800">{{ badge.name }}</h4>
-                        {% if active_badge.name == badge.name %}
-                          <span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">เหรียญหลัก</span>
-                        {% endif %}
-                      </div>
-                      <p class="text-xs text-gray-500">{{ badge.desc }}</p>
-                    </div>
+        <form method="POST" action="{% url 'set_featured_badge' %}">
+          {% csrf_token %} {% with active_badge=profile.get_active_badge %}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {% for badge in badges %}
+            <label
+              class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition hover:shadow-md {% if active_badge.name == badge.name %}ring-2 ring-amber-400 shadow-sm {{ badge.color }}{% else %}{{ badge.color }} opacity-85 hover:opacity-100{% endif %}"
+            >
+              <div class="flex items-center gap-3">
+                <span class="text-3xl">{{ badge.icon }}</span>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <h4 class="font-bold text-sm text-gray-800">
+                      {{ badge.name }}
+                    </h4>
+                    {% if active_badge.name == badge.name %}
+                    <span
+                      class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                      >เหรียญหลัก</span
+                    >
+                    {% endif %}
                   </div>
-                  <div class="flex items-center gap-2">
-                    <button 
-                      type="button" 
-                      onclick="event.preventDefault(); event.stopPropagation(); openBadgeModal({
+                  <p class="text-xs text-gray-500">{{ badge.desc }}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  onclick="event.preventDefault(); event.stopPropagation(); openBadgeModal({
                         name: '{{ badge.name|escapejs }}',
                         icon: '{{ badge.icon|escapejs }}',
                         desc: '{{ badge.desc|escapejs }}',
                         condition: '{{ badge.condition|escapejs }}',
                         color: '{{ badge.color|escapejs }}'
                       })"
-                      class="p-1.5 text-gray-400 hover:text-amber-600 rounded-xl hover:bg-black/5 transition"
-                      title="คลิกเพื่อดูรายละเอียดและเงื่อนไข"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" stroke-width="2"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16v-4m0-4h.01"/>
-                      </svg>
-                    </button>
-                    <input 
-                      type="radio" 
-                      name="badge_name" 
-                      value="{{ badge.name }}" 
-                      onchange="this.form.submit()"
-                      {% if active_badge.name == badge.name %}checked{% endif %}
-                      class="w-4 h-4 text-amber-500 focus:ring-amber-400 cursor-pointer accent-amber-500"
-                    >
-                  </div>
-                </label>
-              {% endfor %}
-            </div>
-            {% endwith %}
-          </form>
-        {% else %}
-          <div class="bg-amber-50/60 rounded-2xl p-4 text-center text-xs text-amber-700 border border-amber-100">
-            🌱 ยังไม่มีเหรียญตรา ลองเขียนรีวิวสถานที่แรกเพื่อปลดล็อกเหรียญตรานักสำรวจ!
+                  class="p-1.5 text-gray-400 hover:text-amber-600 rounded-xl hover:bg-black/5 transition"
+                  title="คลิกเพื่อดูรายละเอียดและเงื่อนไข"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="12" cy="12" r="10" stroke-width="2" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 16v-4m0-4h.01"
+                    />
+                  </svg>
+                </button>
+                <input
+                  type="radio"
+                  name="badge_name"
+                  value="{{ badge.name }}"
+                  onchange="this.form.submit()"
+                  {% if active_badge.name == badge.name %}checked{% endif %}
+                  class="w-4 h-4 text-amber-500 focus:ring-amber-400 cursor-pointer accent-amber-500"
+                />
+              </div>
+            </label>
+            {% endfor %}
           </div>
+          {% endwith %}
+        </form>
+        {% else %}
+        <div
+          class="bg-amber-50/60 rounded-2xl p-4 text-center text-xs text-amber-700 border border-amber-100"
+        >
+          🌱 ยังไม่มีเหรียญตรา
+          ลองเขียนรีวิวสถานที่แรกเพื่อปลดล็อกเหรียญตรานักสำรวจ!
+        </div>
         {% endif %}
       </div>
 
       <!-- โซนสถานที่โปรดที่บันทึกไว้ (My Bookmarks) -->
       <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100">
-        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <span>🔖</span> สถานที่โปรดที่บันทึกไว้ ({{ bookmarked_places.count }})
+        <h3
+          class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2"
+        >
+          <!-- ปรับเป็น w-4 h-4 ให้ขนาดความสูงเท่ากับอิโมจิอื่น -->
+          <svg
+            class="w-4 h-4 fill-amber-500 text-amber-500 shrink-0"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M5 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v19.14a.5.5 0 0 1-.79.41L12 18.25l-6.21 4.3a.5.5 0 0 1-.79-.41V3z"
+            />
+          </svg>
+          <span>สถานที่โปรดที่บันทึกไว้ ({{ bookmarked_places.count }})</span>
         </h3>
-      
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {% for place in bookmarked_places %}
-            <a href="{% url 'place_detail' place.pk %}" class="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 hover:border-amber-300 hover:bg-amber-50/30 transition group">
-              <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-base shrink-0 font-bold">
-                📍
-              </div>
-              <div class="overflow-hidden">
-                <h4 class="text-xs font-bold text-gray-800 group-hover:text-amber-600 truncate">{{ place.name }}</h4>
-                <span class="text-[10px] text-gray-400">{{ place.get_category_display }}</span>
-              </div>
-            </a>
-          {% empty %}
-            <div class="col-span-2 text-center py-6 text-xs text-gray-400">
-              ยังไม่มีสถานที่ที่บันทึกไว้
+          <a
+            href="{% url 'place_detail' place.pk %}"
+            class="flex items-center gap-3 p-3 rounded-2xl border border-gray-100 hover:border-amber-300 hover:bg-amber-50/30 transition group"
+          >
+            <div
+              class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-base shrink-0 font-bold"
+            >
+              📍
             </div>
+            <div class="overflow-hidden">
+              <h4
+                class="text-xs font-bold text-gray-800 group-hover:text-amber-600 truncate"
+              >
+                {{ place.name }}
+              </h4>
+              <span class="text-[10px] text-gray-400"
+                >{{ place.get_category_display }}</span
+              >
+            </div>
+          </a>
+          {% empty %}
+          <div class="col-span-2 text-center py-6 text-xs text-gray-400">
+            ยังไม่มีสถานที่ที่บันทึกไว้
+          </div>
           {% endfor %}
         </div>
       </div>
 
       <!-- โซนประวัติการรีวิว (My Reviews) -->
       <div class="bg-white rounded-3xl p-6 shadow-sm border border-amber-100">
-        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <h3
+          class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2"
+        >
           <span>📝</span> ประวัติการรีวิวของคุณ ({{ total_reviews }})
         </h3>
 
         <div class="space-y-4">
           {% for review in reviews %}
-            <div class="p-4 rounded-2xl border border-gray-100 hover:border-amber-200 transition bg-gray-50/50">
-              <div class="flex justify-between items-start mb-2">
-                <a href="{% url 'place_detail' review.place.pk %}" class="font-bold text-sm text-gray-800 hover:text-amber-600 transition">
-                  📍 {{ review.place.name }}
-                </a>
-                <span class="text-xs font-semibold text-amber-500">★ {{ review.rating }}</span>
-              </div>
-              <p class="text-xs sm:text-sm text-gray-600 mb-2">{{ review.comment }}</p>
-              <div class="text-[11px] text-gray-400">
-                เขียนเมื่อ {{ review.created_at|date:"d M Y, H:i" }} น.
-              </div>
+          <div
+            class="p-4 rounded-2xl border border-gray-100 hover:border-amber-200 transition bg-gray-50/50"
+          >
+            <div class="flex justify-between items-start mb-2">
+              <a
+                href="{% url 'place_detail' review.place.pk %}"
+                class="font-bold text-sm text-gray-800 hover:text-amber-600 transition"
+              >
+                📍 {{ review.place.name }}
+              </a>
+              <span class="text-xs font-semibold text-amber-500"
+                >★ {{ review.rating }}</span
+              >
             </div>
+            <p class="text-xs sm:text-sm text-gray-600 mb-2">
+              {{ review.comment }}
+            </p>
+            <div class="text-[11px] text-gray-400">
+              เขียนเมื่อ {{ review.created_at|date:"d M Y, H:i" }} น.
+            </div>
+          </div>
           {% empty %}
-            <div class="text-center py-8 text-gray-400 text-xs">
-              คุณยังไม่เคยเขียนรีวิวสถานที่ใดเลย
-            </div>
+          <div class="text-center py-8 text-gray-400 text-xs">
+            คุณยังไม่เคยเขียนรีวิวสถานที่ใดเลย
+          </div>
           {% endfor %}
         </div>
       </div>
-
     </div>
-
   </div>
 </div>
 
 <!-- ================= Modal ครอบรูปโปรไฟล์ ================= -->
-<div id="crop-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-  <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-amber-100">
+<div
+  id="crop-modal"
+  class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-amber-100"
+  >
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
         <span>✂️</span> ปรับตำแหน่งและขนาดรูปโปรไฟล์
       </h3>
-      <button type="button" id="close-modal-btn" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
+      <button
+        type="button"
+        id="close-modal-btn"
+        class="text-gray-400 hover:text-gray-600 text-lg font-bold"
+      >
+        ✕
+      </button>
     </div>
 
     <!-- พื้นที่แสดงรูปสำหรับเลื่อน/ซูม -->
-    <div class="w-full h-72 sm:h-80 bg-gray-900 rounded-2xl overflow-hidden flex items-center justify-center">
-      <img id="image-to-crop" class="max-w-full block" src="" alt="Source Image">
+    <div
+      class="w-full h-72 sm:h-80 bg-gray-900 rounded-2xl overflow-hidden flex items-center justify-center"
+    >
+      <img
+        id="image-to-crop"
+        class="max-w-full block"
+        src=""
+        alt="Source Image"
+      />
     </div>
 
     <!-- ปุ่มควบคุมซูม -->
     <div class="flex justify-center items-center gap-4 my-4">
-      <button type="button" id="zoom-out-btn" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold text-gray-700 transition">
+      <button
+        type="button"
+        id="zoom-out-btn"
+        class="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold text-gray-700 transition"
+      >
         🔍- ซูมออก
       </button>
-      <button type="button" id="zoom-in-btn" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold text-gray-700 transition">
+      <button
+        type="button"
+        id="zoom-in-btn"
+        class="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-xs font-bold text-gray-700 transition"
+      >
         🔍+ ซูมเข้า
       </button>
     </div>
 
     <!-- ปุ่มกดยืนยัน -->
     <div class="flex justify-end gap-2 border-t border-gray-100 pt-4">
-      <button type="button" id="cancel-crop-btn" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition">
+      <button
+        type="button"
+        id="cancel-crop-btn"
+        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition"
+      >
         ยกเลิก
       </button>
-      <button type="button" id="apply-crop-btn" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-xl transition shadow-sm">
+      <button
+        type="button"
+        id="apply-crop-btn"
+        class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-xl transition shadow-sm"
+      >
         เสร็จสิ้น
       </button>
     </div>
@@ -266,27 +384,27 @@
 
 <script>
   let cropper = null;
-  const avatarInput = document.getElementById('avatar-input');
-  const cropModal = document.getElementById('crop-modal');
-  const imageToCrop = document.getElementById('image-to-crop');
-  const avatarPreview = document.getElementById('avatar-preview');
+  const avatarInput = document.getElementById("avatar-input");
+  const cropModal = document.getElementById("crop-modal");
+  const imageToCrop = document.getElementById("image-to-crop");
+  const avatarPreview = document.getElementById("avatar-preview");
 
-  const applyCropBtn = document.getElementById('apply-crop-btn');
-  const cancelCropBtn = document.getElementById('cancel-crop-btn');
-  const closeModalBtn = document.getElementById('close-modal-btn');
-  const zoomInBtn = document.getElementById('zoom-in-btn');
-  const zoomOutBtn = document.getElementById('zoom-out-btn');
+  const applyCropBtn = document.getElementById("apply-crop-btn");
+  const cancelCropBtn = document.getElementById("cancel-crop-btn");
+  const closeModalBtn = document.getElementById("close-modal-btn");
+  const zoomInBtn = document.getElementById("zoom-in-btn");
+  const zoomOutBtn = document.getElementById("zoom-out-btn");
 
   // เมื่อผู้ใช้เลือกไฟล์รูป
-  avatarInput.addEventListener('change', function(e) {
+  avatarInput.addEventListener("change", function (e) {
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
       const reader = new FileReader();
 
-      reader.onload = function(event) {
+      reader.onload = function (event) {
         imageToCrop.src = event.target.result;
-        cropModal.classList.remove('hidden');
+        cropModal.classList.remove("hidden");
 
         // ทำลาย instance เดิมถ้ามี
         if (cropper) {
@@ -297,7 +415,7 @@
         cropper = new Cropper(imageToCrop, {
           aspectRatio: 1, // สัดส่วน 1:1 (สี่เหลี่ยมจัตุรัสสำหรับทำวงกลม)
           viewMode: 1,
-          dragMode: 'move',
+          dragMode: "move",
           autoCropArea: 0.85,
           restore: false,
           guides: false,
@@ -313,23 +431,23 @@
   });
 
   // ซูมเข้า - ออก
-  zoomInBtn.addEventListener('click', () => cropper && cropper.zoom(0.1));
-  zoomOutBtn.addEventListener('click', () => cropper && cropper.zoom(-0.1));
+  zoomInBtn.addEventListener("click", () => cropper && cropper.zoom(0.1));
+  zoomOutBtn.addEventListener("click", () => cropper && cropper.zoom(-0.1));
 
   // ฟังก์ชันปิด Modal
   function closeModal() {
-    cropModal.classList.add('hidden');
+    cropModal.classList.add("hidden");
     if (cropper) {
       cropper.destroy();
       cropper = null;
     }
   }
 
-  closeModalBtn.addEventListener('click', closeModal);
-  cancelCropBtn.addEventListener('click', closeModal);
+  closeModalBtn.addEventListener("click", closeModal);
+  cancelCropBtn.addEventListener("click", closeModal);
 
   // เมื่อกด "เสร็จสิ้น" ในกล่อง Crop
-  applyCropBtn.addEventListener('click', () => {
+  applyCropBtn.addEventListener("click", () => {
     if (!cropper) return;
 
     // ได้รูป Canvas ขนาด 400x400 คมชัดพอดีสำหรับโปรไฟล์
@@ -339,18 +457,24 @@
     });
 
     // 1. อัปเดตรูปแสดงผลบนหน้าโปรไฟล์ทันที (Instant Preview)
-    avatarPreview.src = canvas.toDataURL('image/jpeg');
+    avatarPreview.src = canvas.toDataURL("image/jpeg");
 
     // 2. แปลง Canvas เป็นไฟล์ Blob แล้วยัดกลับเข้า Input File อัตโนมัติ เพื่อส่งไปเซฟที่ Django
-    canvas.toBlob((blob) => {
-      const croppedFile = new File([blob], "avatar.jpg", { type: "image/jpeg" });
-      
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(croppedFile);
-      avatarInput.files = dataTransfer.files;
-      
-      closeModal();
-    }, 'image/jpeg', 0.9);
+    canvas.toBlob(
+      (blob) => {
+        const croppedFile = new File([blob], "avatar.jpg", {
+          type: "image/jpeg",
+        });
+
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(croppedFile);
+        avatarInput.files = dataTransfer.files;
+
+        closeModal();
+      },
+      "image/jpeg",
+      0.9,
+    );
   });
 </script>
 {% endblock %}

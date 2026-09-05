@@ -8,8 +8,9 @@ from .utils import optimize_image
 
 CATEGORY_CHOICES = [
     ("cafe", "คาเฟ่ / ร้านอาหาร"),
+    ("temple", "วัด / โบราณสถาน"),
     ("nature", "ธรรมชาติ / สวนสาธารณะ"),
-    ("temple", "วัด / วัฒนธรรม"),
+    ("learning", "พิพิธภัณฑ์ / แหล่งเรียนรู้"),
     ("market", "ตลาด / ถนนคนเดิน"),
     ("other", "อื่นๆ"),
 ]
@@ -43,6 +44,15 @@ class Place(models.Model):
         null=True,
         verbose_name="แท็กไฮไลต์ (คั่นด้วยจุลภาค)",
         help_text="เช่น มีที่จอดรถ, ถ่ายรูปสวย, เปิดดึก, ห้องแอร์",
+    )
+    opening_hours = models.CharField(
+        max_length=150, blank=True, null=True, verbose_name="เวลาทำการ"
+    )
+    admission_fee = models.CharField(
+        max_length=100, blank=True, null=True, verbose_name="ค่าเข้าชม"
+    )
+    contact = models.CharField(
+        max_length=100, blank=True, null=True, verbose_name="ติดต่อ"
     )
 
     class Meta:

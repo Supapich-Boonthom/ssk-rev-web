@@ -36,6 +36,7 @@ def place_list(request):
     tab = request.GET.get("tab", "places")
     feed_filter = request.GET.get("sort", "trending")
     selected_filter = request.GET.get("filter", "")
+    saved = request.GET.get("saved", "")
     selected_tag = request.GET.get("tag", "")
 
     places = (
@@ -43,8 +44,10 @@ def place_list(request):
         .annotate(reviews_count=Count("reviews"))
         .prefetch_related("reviews")
     )
-    if selected_filter == "saved" and request.user.is_authenticated:
+    if (selected_filter == "saved" or saved == "true") and request.user.is_authenticated:
         places = places.filter(bookmarked_by__user=request.user)
+    elif saved == "true" and not request.user.is_authenticated:
+        places = places.none()
     elif category:
         places = places.filter(category=category)
 
@@ -350,9 +353,56 @@ def delete_review(request, pk):
         place_pk = review.place.pk
         review.delete()
         messages.success(request, "ลบรีวิวของคุณเรียบร้อยแล้ว")
+        referer = request.META.get("HTTP_REFERER")
+        if referer:
+            return redirect(referer)
         return redirect("place_detail", pk=place_pk)
 
+    referer = request.META.get("HTTP_REFERER")
+    if referer:
+        return redirect(referer)
     return redirect("place_detail", pk=review.place.pk)
+
+
+@login_required(login_url="login")
+def edit_review(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+
+    # ตรวจสอบสิทธิ์: หากไม่ใช่เจ้าของรีวิว ให้ตัดสิทธิ์ด้วย Error 403 ทันที
+    if review.user != request.user:
+        raise PermissionDenied
+
+    if request.method == "POST":
+        rating = request.POST.get("rating")
+        comment = request.POST.get("comment", "").strip()
+
+        if rating:
+            try:
+                review.rating = max(1, min(5, int(rating)))
+            except (ValueError, TypeError):
+                pass
+
+        if comment:
+            review.comment = mask_profanity(comment)
+
+        review.save()
+
+        # แนบรูปเพิ่มเติมหากมีการอัปโหลด
+        images = request.FILES.getlist("upload_images")
+        for img in images:
+            ReviewImage.objects.create(review=review, image=img)
+
+        messages.success(request, "แก้ไขรีวิวของคุณเรียบร้อยแล้ว!")
+        return redirect("place_detail", pk=review.place.pk)
+
+    return render(
+        request,
+        "edit_review.html",
+        {
+            "review": review,
+            "place": review.place,
+        },
+    )
 
 
 @login_required(login_url="login")

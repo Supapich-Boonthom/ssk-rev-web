@@ -1,31 +1,51 @@
 {% extends 'base.html' %} {% block content %}
 <div class="max-w-4xl mx-auto">
   <!-- Breadcrumb Back Button -->
-  <button 
-    type="button" 
-    onclick="history.back()" 
+  <button
+    type="button"
+    onclick="history.back()"
     class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-amber-600 transition mb-4 cursor-pointer"
   >
     ← กลับหน้ารวมสถานที่
   </button>
 
   <!-- กล่องรูปภาพด้านบนของหน้ารายละเอียด -->
-  <div class="relative w-full h-72 md:h-96 bg-[#f4f5f7] rounded-3xl overflow-hidden flex items-center justify-center mb-6 shadow-sm border border-gray-100">
+  <div
+    class="relative w-full h-72 md:h-96 bg-[#f4f5f7] rounded-3xl overflow-hidden flex items-center justify-center mb-6 shadow-sm border border-gray-100"
+  >
     {% if place.image %}
-      <img src="{{ place.image.url }}" alt="{{ place.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
-      <div class="hidden flex-col items-center justify-center select-none">
-        <span class="text-6xl filter drop-shadow-sm">📍</span>
-      </div>
+    <img
+      src="{{ place.image.url }}"
+      alt="{{ place.name }}"
+      class="w-full h-full object-cover"
+      onerror="
+        this.style.display = 'none';
+        if (this.nextElementSibling)
+          this.nextElementSibling.classList.remove('hidden');
+      "
+    />
+    <div class="hidden flex-col items-center justify-center select-none">
+      <span class="text-6xl filter drop-shadow-sm">📍</span>
+    </div>
     {% elif place.image_url %}
-      <img src="{{ place.image_url }}" alt="{{ place.name }}" class="w-full h-full object-cover" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');">
-      <div class="hidden flex-col items-center justify-center select-none">
-        <span class="text-6xl filter drop-shadow-sm">📍</span>
-      </div>
+    <img
+      src="{{ place.image_url }}"
+      alt="{{ place.name }}"
+      class="w-full h-full object-cover"
+      onerror="
+        this.style.display = 'none';
+        if (this.nextElementSibling)
+          this.nextElementSibling.classList.remove('hidden');
+      "
+    />
+    <div class="hidden flex-col items-center justify-center select-none">
+      <span class="text-6xl filter drop-shadow-sm">📍</span>
+    </div>
     {% else %}
-      <!-- แสดงหมุดสีชมพูอยู่ตรงกลางเมื่อไม่มีรูป -->
-      <div class="flex flex-col items-center justify-center select-none">
-        <span class="text-6xl filter drop-shadow-sm">📍</span>
-      </div>
+    <!-- แสดงหมุดสีชมพูอยู่ตรงกลางเมื่อไม่มีรูป -->
+    <div class="flex flex-col items-center justify-center select-none">
+      <span class="text-6xl filter drop-shadow-sm">📍</span>
+    </div>
     {% endif %}
   </div>
 
@@ -62,7 +82,9 @@
                   d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
                 />
               </svg>
-              <span>{% if is_bookmarked %}บันทึกแล้ว{% else %}บันทึกสถานที่นี้{% endif %}</span>
+              <span>
+                {% if is_bookmarked %}บันทึกแล้ว{% else %}บันทึกสถานที่นี้{% endif %}
+              </span>
             </a>
           </div>
         </div>
@@ -76,22 +98,46 @@
         </div>
       </div>
       <p class="text-gray-700 leading-relaxed mt-6">{{ place.description }}</p>
-      <!-- ปุ่มเปิด Google Maps และพิกัด -->
-      <div class="mt-6 flex flex-wrap gap-3">
-        {% if place.google_maps_url %}
-        <a
-          href="{{ place.google_maps_url }}"
-          target="_blank"
-          class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl transition shadow-sm"
-        >
-          🗺️ เปิดนำทางบน Google Maps
-        </a>
-        {% endif %} {% if place.latitude and place.longitude %}
-        <span
-          class="inline-flex items-center text-xs font-mono text-gray-500 bg-gray-100 px-3 py-2 rounded-xl"
-        >
-          พิกัด: {{ place.latitude }}, {{ place.longitude }}
-        </span>
+      <!-- แถบข้อมูลสไตล์ Google Maps (ไอคอนนำหน้า + แสดงเฉพาะอันที่มีข้อมูล + ไม่มีกล่องครอบ) -->
+      <div class="my-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <!-- ฝั่งซ้าย: ข้อมูลสำคัญ -->
+        <div class="space-y-2 text-sm">
+          <!-- เวลาทำการ -->
+          {% if place.opening_hours %}
+            <div class="flex items-center gap-2.5 text-gray-700">
+              <span class="text-base leading-none">🕒</span>
+              <span class="font-medium text-gray-800">{{ place.opening_hours }}</span>
+            </div>
+          {% endif %}
+
+          <!-- ค่าเข้าชม / ค่าบริการ -->
+          {% if place.admission_fee %}
+            <div class="flex items-center gap-2.5 text-gray-700">
+              <span class="text-base leading-none">🎟️</span>
+              <span class="font-medium text-gray-800">{{ place.admission_fee }}</span>
+            </div>
+          {% endif %}
+
+          <!-- ติดต่อ / เบอร์โทร -->
+          {% if place.contact %}
+            <div class="flex items-center gap-2.5 text-gray-700">
+              <span class="text-base leading-none">📞</span>
+              <span class="text-gray-700">{{ place.contact }}</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- ฝั่งขวา: ปุ่มเปิดนำทางบน Google Maps -->
+        {% if place.latitude and place.longitude or place.google_maps_url %}
+          <a href="{% if place.google_maps_url %}{{ place.google_maps_url }}{% else %}https://www.google.com/maps/search/?api=1&query={{ place.latitude }},{{ place.longitude }}{% endif %}" 
+             target="_blank" 
+             rel="noopener noreferrer"
+             class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition shrink-0 self-start sm:self-auto">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            </svg>
+            <span>เปิดนำทางบน Google Maps</span>
+          </a>
         {% endif %}
       </div>
 
@@ -175,18 +221,23 @@
         </div>
         <!-- แนบรูปภาพ + แสดงตัวอย่าง -->
         <div class="mt-4">
-          <label class="block text-sm font-semibold text-gray-700 mb-1">แนบรูปภาพ (เลือกได้หลายรูป)</label>
-          <input 
-            type="file" 
-            id="review-image-input" 
-            name="upload_images" 
-            multiple 
-            accept="image/*" 
-            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer"
+          <label class="block text-sm font-semibold text-gray-700 mb-1"
+            >แนบรูปภาพ (เลือกได้หลายรูป)</label
           >
+          <input
+            type="file"
+            id="review-image-input"
+            name="upload_images"
+            multiple
+            accept="image/*"
+            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer"
+          />
 
           <!-- กล่องแสดงรูปตัวอย่างก่อนกดส่ง -->
-          <div id="image-preview-container" class="flex flex-wrap gap-3 mt-3 hidden"></div>
+          <div
+            id="image-preview-container"
+            class="flex flex-wrap gap-3 mt-3 hidden"
+          ></div>
         </div>
         <button
           type="submit"
@@ -216,50 +267,107 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <a href="{% url 'user_profile' review.user.username %}">
-              <img src="{{ review.user.profile.avatar_url }}" class="w-8 h-8 rounded-full object-cover border border-amber-100 shadow-sm hover:opacity-80 transition">
+              <img
+                src="{{ review.user.profile.avatar_url }}"
+                class="w-8 h-8 rounded-full object-cover border border-amber-100 shadow-sm hover:opacity-80 transition"
+              />
             </a>
             <div>
               <div class="flex items-center gap-1.5 flex-wrap">
-                <h4 class="text-sm font-semibold text-gray-900 hover:text-amber-600 transition">
-                  <a href="{% url 'user_profile' review.user.username %}">{{ review.user.username }}</a>
+                <h4
+                  class="text-sm font-bold text-gray-800 hover:text-amber-600 transition"
+                >
+                  <a href="{% url 'user_profile' review.user.username %}"
+                    >{{ review.user.username }}</a
+                  >
                 </h4>
                 {% with badge=review.user.profile.get_active_badge %}
-                  {% if badge %}
-                    <button 
-                      type="button"
-                      onclick="openBadgeModal({
+                {% if badge %}
+                <button
+                  type="button"
+                  onclick="openBadgeModal({
                         name: '{{ badge.name|escapejs }}',
                         icon: '{{ badge.icon|escapejs }}',
                         desc: '{{ badge.desc|escapejs }}',
                         condition: '{{ badge.condition|escapejs }}',
                         color: '{{ badge.color|escapejs }}'
                       })"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border {{ badge.color }} hover:scale-105 transition shadow-2xs cursor-pointer" 
-                      title="คลิกเพื่อดูรายละเอียดเหรียญตรา"
-                    >
-                      <span>{{ badge.icon }}</span>
-                      <span>{{ badge.name }}</span>
-                    </button>
-                  {% endif %}
-                {% endwith %}
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border {{ badge.color }} hover:scale-105 transition shadow-2xs cursor-pointer"
+                  title="คลิกเพื่อดูรายละเอียดเหรียญตรา"
+                >
+                  <span>{{ badge.icon }}</span>
+                  <span>{{ badge.name }}</span>
+                </button>
+                {% endif %} {% endwith %}
               </div>
               <span class="text-[11px] text-gray-400"
                 >{{ review.created_at|date:"d M Y H:i" }}</span
               >
             </div>
           </div>
-          <div class="flex items-center gap-3">
-            <span class="text-amber-500 font-bold text-sm">★ {{ review.rating }}</span>
-            {% if review.user == request.user %}
-            <form action="{% url 'delete_review' review.pk %}" method="POST" class="inline" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรีวิวนี้?');">
-              {% csrf_token %}
-              <button type="submit" class="text-gray-400 hover:text-red-500 transition p-1" title="ลบรีวิวนี้">
-                <svg class="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </form>
-            {% endif %}
+          <div class="flex items-center gap-2">
+            <!-- 1. คะแนนดาว -->
+            <span class="text-xs font-bold text-amber-500 shrink-0">
+              ★ {{ review.rating }}/5 ดาว
+            </span>
+
+            <!-- 2. เมนูจุดสามจุด (⋮) -->
+            <div class="relative inline-block text-left">
+              <details class="group relative review-menu">
+                <summary class="list-none p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full cursor-pointer transition flex items-center justify-center [&::-webkit-details-marker]:hidden">
+                  <!-- ไอคอน 3 จุดแนวตั้ง -->
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                  </svg>
+                </summary>
+
+                <!-- กล่อง Dropdown ที่เด้งลงมา -->
+                <div class="absolute right-0 mt-1 w-32 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-30">
+                  {% if request.user == review.user %}
+                    <!-- สิทธิ์เจ้าของ: แก้ไข -->
+                    <a href="{% url 'edit_review' review.pk %}" 
+                       class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2 transition">
+                      <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/>
+                      </svg>
+                      <span>แก้ไข</span>
+                    </a>
+
+                    <!-- สิทธิ์เจ้าของ: ลบ -->
+                    <form action="{% url 'delete_review' review.pk %}" method="POST" onsubmit="return confirm('ยืนยันการลบรีวิวนี้?');" class="m-0">
+                      {% csrf_token %}
+                      <button type="submit" class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        <span>ลบรีวิว</span>
+                      </button>
+                    </form>
+
+                  {% elif request.user.is_authenticated %}
+                    <!-- สิทธิ์คนอื่น: รายงาน -->
+                    <button
+                      type="button"
+                      onclick="openReportModal('{{ review.pk }}', '{{ place.name|escapejs }}', '{{ review.user.username|escapejs }}')"
+                      class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition cursor-pointer"
+                    >
+                      <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+                      </svg>
+                      <span>รายงาน</span>
+                    </button>
+                  {% else %}
+                    <a href="{% url 'login' %}?next={{ request.get_full_path }}" 
+                       class="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2 transition">
+                      <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+                      </svg>
+                      <span>รายงาน</span>
+                    </a>
+                  {% endif %}
+                </div>
+              </details>
+            </div>
           </div>
         </div>
         <p class="text-gray-700 text-sm mt-3">{{ review.comment }}</p>
@@ -267,39 +375,59 @@
         {% if review.tags.all %}
         <div class="flex flex-wrap gap-1.5 mt-2">
           {% for tag in review.tags.all %}
-          <a href="{% url 'place_list' %}?tag={{ tag.name }}" class="text-[11px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md hover:underline font-medium">
+          <a
+            href="{% url 'place_list' %}?tag={{ tag.name }}"
+            class="text-[11px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md hover:underline font-medium"
+          >
             #{{ tag.name }}
           </a>
           {% endfor %}
         </div>
         {% endif %}
-        {% if review.images.all %}
-          <div class="flex gap-2.5 overflow-x-auto py-2 no-scrollbar mt-3">
-            {% for img_obj in review.images.all %}
-              <div class="shrink-0 w-36 h-28 sm:w-44 sm:h-32 rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 cursor-pointer">
-                <img 
-                  src="{{ img_obj.image.url }}" 
-                  alt="รูปภาพรีวิว" 
-                  onclick="openImageModal(this.src)"
-                  class="w-full h-full object-cover hover:scale-105 transition duration-200"
-                  title="คลิกเพื่อดูภาพขนาดเต็ม"
-                  loading="lazy"
-                >
-              </div>
-            {% endfor %}
-          </div>
 
-        {% elif review.image %}
-          <div class="mt-3 max-w-md overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
-            <img 
-              src="{{ review.image.url }}" 
-              alt="รูปภาพรีวิว" 
+        {% if review.images.all %}
+          {% if review.images.all|length == 1 %}
+          <div class="mt-3 overflow-hidden rounded-2xl border border-gray-100 max-w-lg bg-gray-50">
+            {% for img_obj in review.images.all %}
+            <img
+              src="{{ img_obj.image.url }}"
+              alt="รูปรีวิว"
               onclick="openImageModal(this.src)"
-              class="w-full h-auto max-h-80 object-cover cursor-pointer hover:opacity-95 transition"
+              class="w-full aspect-video object-cover cursor-pointer hover:opacity-95 transition"
               title="คลิกเพื่อดูภาพขนาดเต็ม"
               loading="lazy"
-            >
+            />
+            {% endfor %}
           </div>
+          {% else %}
+          <div class="flex gap-2.5 overflow-x-auto py-2 no-scrollbar mt-3 max-w-lg">
+            {% for img_obj in review.images.all %}
+            <div
+              class="shrink-0 w-36 h-28 sm:w-44 sm:h-32 rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 cursor-pointer"
+            >
+              <img
+                src="{{ img_obj.image.url }}"
+                alt="รูปภาพรีวิว"
+                onclick="openImageModal(this.src)"
+                class="w-full h-full object-cover hover:scale-105 transition duration-200"
+                title="คลิกเพื่อดูภาพขนาดเต็ม"
+                loading="lazy"
+              />
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        {% elif review.image %}
+        <div class="mt-3 overflow-hidden rounded-2xl border border-gray-100 max-w-lg bg-gray-50">
+          <img
+            src="{{ review.image.url }}"
+            alt="รูปรีวิว"
+            onclick="openImageModal(this.src)"
+            class="w-full aspect-video object-cover cursor-pointer hover:opacity-95 transition"
+            title="คลิกเพื่อดูภาพขนาดเต็ม"
+            loading="lazy"
+          />
+        </div>
         {% endif %}
       </div>
       {% empty %}
@@ -318,7 +446,7 @@
   const ratingLabels = {
     1: "1 ดาว (ต้องปรับปรุง)",
     2: "2 ดาว (พอใช้)",
-    3: "3 ดาว (ดี)",
+    3: "3 ดาว (ค่อนข้างดี)",
     4: "4 ดาว (ดีมาก)",
     5: "5 ดาว (ยอดเยี่ยม)",
   };
@@ -386,5 +514,14 @@
       }
     });
   }
+
+  // ปิดเมนู dropdown จุดสามจุด เมื่อคลิกพื้นที่อื่น
+  document.addEventListener("click", (e) => {
+    document.querySelectorAll("details.review-menu[open]").forEach((details) => {
+      if (!details.contains(e.target)) {
+        details.removeAttribute("open");
+      }
+    });
+  });
 </script>
 {% endblock %}

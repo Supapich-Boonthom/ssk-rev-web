@@ -4,8 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
-      {% block title %}รีวิวสถานที่ท่องเที่ยวและคาเฟ่ศรีสะเกษ{% endblock %}
+      {% block title %}รีวิวสถานที่ท่องเที่ยวในศรีสะเกษ{% endblock %}
     </title>
+    <!-- Favicon: หมุดสีส้ม -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'><path fill-rule='evenodd' d='M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z' clip-rule='evenodd'/></svg>">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link
@@ -33,60 +35,107 @@
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
-            <a
-              href="{% url 'place_list' %}"
-              class="text-xl font-bold text-amber-600 flex items-center gap-2"
-            >
-              <span>✨ Sisaket Reviews</span>
+            <a href="{% url 'place_list' %}" class="flex items-center gap-2 group py-1">
+              <!-- หมุดนำทางเด่นชัดขึ้น มีรูตรงกลางชัดเจน ไม่แบน -->
+              <svg class="w-7 h-7 text-amber-500 shrink-0 group-hover:-translate-y-0.5 transition-transform duration-200" 
+                   viewBox="0 0 24 24" 
+                   fill="currentColor">
+                <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+              </svg>
+
+              <!-- สลับสีคำ: ดำเข้ม + ส้มแอมเบอร์ เพื่อสร้างมิติ -->
+              <span class="font-extrabold text-xl tracking-tight flex items-center gap-2">
+                <span class="text-gray-900">Sisaket</span>
+                <span class="text-amber-500">Reviews</span>
+              </span>
             </a>
           </div>
           <div class="flex items-center gap-4">
             {% if user.is_authenticated %}
             <!-- ปุ่มรูประฆังพร้อม Dropdown -->
             <div class="relative">
-              <button id="notif-btn" class="relative p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-full transition focus:outline-none flex items-center justify-center">
+              <button
+                id="notif-btn"
+                class="relative p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-full transition focus:outline-none flex items-center justify-center"
+              >
                 <!-- SVG ไอคอนระฆัง -->
-                <svg class="w-6 h-6 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                <svg
+                  class="w-6 h-6 fill-none stroke-current"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                  />
                 </svg>
 
                 <!-- จุดสีแดงแจ้งเตือน (ขึ้นเฉพาะเมื่อมีข้อความที่ยังไม่ได้อ่าน) -->
                 {% if unread_notifications_count > 0 %}
-                  <span class="absolute top-1 right-1 flex h-2.5 w-2.5">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
-                  </span>
+                <span class="absolute top-1 right-1 flex h-2.5 w-2.5">
+                  <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"
+                  ></span>
+                  <span
+                    class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"
+                  ></span>
+                </span>
                 {% endif %}
               </button>
 
               <!-- กล่องข้อความแจ้งเตือน Dropdown Menu -->
-              <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-amber-100 py-3 z-50">
-                <div class="flex items-center justify-between px-4 pb-2 border-b border-gray-100">
-                  <span class="text-xs font-bold text-gray-800">การแจ้งเตือน</span>
+              <div
+                id="notif-dropdown"
+                class="hidden absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-amber-100 py-3 z-50"
+              >
+                <div
+                  class="flex items-center justify-between px-4 pb-2 border-b border-gray-100"
+                >
+                  <span class="text-xs font-bold text-gray-800"
+                    >การแจ้งเตือน</span
+                  >
                   {% if unread_notifications_count > 0 %}
-                    <a href="{% url 'mark_all_read' %}" class="text-[11px] text-amber-600 hover:underline">อ่านทั้งหมด</a>
+                  <a
+                    href="{% url 'mark_all_read' %}"
+                    class="text-[11px] text-amber-600 hover:underline"
+                    >อ่านทั้งหมด</a
+                  >
                   {% endif %}
                 </div>
 
                 <div class="max-h-72 overflow-y-auto divide-y divide-gray-50">
                   {% for notif in recent_notifications %}
-                    <a href="{% url 'read_notification' notif.pk %}" class="block px-4 py-2.5 hover:bg-amber-50/50 transition {% if not notif.is_read %}bg-amber-50/30{% endif %}">
-                      <div class="flex items-start gap-2">
-                        <span class="text-base mt-0.5">🔔</span>
-                        <div class="flex-1">
-                          <h5 class="text-xs font-semibold text-gray-800">{{ notif.title }}</h5>
-                          <p class="text-[11px] text-gray-500 line-clamp-2 mt-0.5">{{ notif.message }}</p>
-                          <span class="text-[9px] text-gray-400 mt-1 block">{{ notif.created_at|timesince }} ที่แล้ว</span>
-                        </div>
-                        {% if not notif.is_read %}
-                          <span class="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1.5"></span>
-                        {% endif %}
+                  <a
+                    href="{% url 'read_notification' notif.pk %}"
+                    class="block px-4 py-2.5 hover:bg-amber-50/50 transition {% if not notif.is_read %}bg-amber-50/30{% endif %}"
+                  >
+                    <div class="flex items-start gap-2">
+                      <span class="text-base mt-0.5">🔔</span>
+                      <div class="flex-1">
+                        <h5 class="text-xs font-semibold text-gray-800">
+                          {{ notif.title }}
+                        </h5>
+                        <p
+                          class="text-[11px] text-gray-500 line-clamp-2 mt-0.5"
+                        >
+                          {{ notif.message }}
+                        </p>
+                        <span class="text-[9px] text-gray-400 mt-1 block"
+                          >{{ notif.created_at|timesince }} ที่แล้ว</span
+                        >
                       </div>
-                    </a>
-                  {% empty %}
-                    <div class="text-center py-6 text-xs text-gray-400">
-                      ไม่มีการแจ้งเตือนใหม่
+                      {% if not notif.is_read %}
+                      <span
+                        class="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1.5"
+                      ></span>
+                      {% endif %}
                     </div>
+                  </a>
+                  {% empty %}
+                  <div class="text-center py-6 text-xs text-gray-400">
+                    ไม่มีการแจ้งเตือนใหม่
+                  </div>
                   {% endfor %}
                 </div>
               </div>
@@ -94,33 +143,68 @@
 
             <!-- เมนูโปรไฟล์ผู้ใช้ -->
             <div class="relative">
-              <button id="user-menu-btn" type="button" class="flex items-center gap-2 p-1 pl-2 rounded-full hover:bg-amber-50/80 transition border border-transparent hover:border-amber-200">
-                <img src="{{ user.profile.avatar_url }}" class="w-8 h-8 rounded-full object-cover border border-amber-100 shadow-sm">
-                <span class="text-xs font-semibold text-gray-700 hidden sm:inline">{{ user.username }}</span>
-                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              <button
+                id="user-menu-btn"
+                type="button"
+                class="flex items-center gap-2 p-1 pl-2 rounded-full hover:bg-amber-50/80 transition border border-transparent hover:border-amber-200"
+              >
+                <img
+                  src="{{ user.profile.avatar_url }}"
+                  class="w-8 h-8 rounded-full object-cover border border-amber-100 shadow-sm"
+                />
+                <span
+                  class="text-xs font-semibold text-gray-700 hidden sm:inline"
+                  >{{ user.username }}</span
+                >
+                <svg
+                  class="w-3.5 h-3.5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
                 </svg>
               </button>
-            
+
               <!-- Dropdown Menu -->
-              <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-amber-100 py-2 z-50">
+              <div
+                id="user-dropdown"
+                class="hidden absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-amber-100 py-2 z-50"
+              >
                 <div class="px-4 py-2 border-b border-gray-100">
                   <p class="text-[10px] text-gray-400">เข้าสู่ระบบในชื่อ</p>
-                  <p class="text-xs font-bold text-gray-800 truncate">{{ user.username }}</p>
+                  <p class="text-xs font-bold text-gray-800 truncate">
+                    {{ user.username }}
+                  </p>
                 </div>
-            
-                <a href="{% url 'place_list' %}" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition">
+
+                <a
+                  href="{% url 'place_list' %}"
+                  class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition"
+                >
                   <span>🏠</span> หน้าแรก
                 </a>
 
-                <a href="{% url 'profile' %}" class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition">
+                <a
+                  href="{% url 'profile' %}"
+                  class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition"
+                >
                   <span>👤</span> หน้าโปรไฟล์ของฉัน
                 </a>
-            
+
                 <div class="border-t border-gray-100 my-1"></div>
-            
+
                 <!-- ปุ่มกดเพื่อเปิด Modal ยืนยันออกจากระบบ -->
-                <button type="button" onclick="openLogoutModal()" class="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 transition text-left">
+                <button
+                  type="button"
+                  onclick="openLogoutModal()"
+                  class="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 transition text-left"
+                >
                   <span>🚪</span> ออกจากระบบ
                 </button>
               </div>
@@ -142,7 +226,6 @@
       </div>
     </nav>
 
-
     <!-- Main Content -->
     <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
       {% block content %}{% endblock %}
@@ -156,19 +239,22 @@
     </footer>
     <!-- JavaScript สำหรับคลิกเปิด/ปิด Dropdown -->
     <script>
-      const notifBtn = document.getElementById('notif-btn');
-      const notifDropdown = document.getElementById('notif-dropdown');
-    
+      const notifBtn = document.getElementById("notif-btn");
+      const notifDropdown = document.getElementById("notif-dropdown");
+
       if (notifBtn && notifDropdown) {
-        notifBtn.addEventListener('click', (e) => {
+        notifBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          notifDropdown.classList.toggle('hidden');
+          notifDropdown.classList.toggle("hidden");
         });
-    
+
         // ปิดเมนูเมื่อคลิกที่อื่นบนหน้าจอ
-        document.addEventListener('click', (e) => {
-          if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
-            notifDropdown.classList.add('hidden');
+        document.addEventListener("click", (e) => {
+          if (
+            !notifDropdown.contains(e.target) &&
+            !notifBtn.contains(e.target)
+          ) {
+            notifDropdown.classList.add("hidden");
           }
         });
       }
@@ -176,50 +262,60 @@
 
     <!-- Toast Notification ลอยมุมขวาบน -->
     {% if messages %}
-      <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full px-4 pointer-events-none">
-        {% for message in messages %}
-          <div class="toast-item pointer-events-auto flex items-center justify-between p-4 rounded-2xl shadow-xl border transition-all duration-300 transform translate-y-0 opacity-100 
-            {% if message.tags == 'success' %} bg-emerald-500 text-white border-emerald-400
-            {% elif message.tags == 'error' %} bg-rose-500 text-white border-rose-400
-            {% else %} bg-amber-500 text-white border-amber-400 {% endif %}">
-            
-            <div class="flex items-center gap-2 text-sm font-medium">
-              {% if message.tags == 'success' %}<span>✅</span>
-              {% elif message.tags == 'error' %}<span>⚠️</span>
-              {% else %}<span>✨</span>{% endif %}
-              <span>{{ message }}</span>
-            </div>
-    
-            <button onclick="this.parentElement.remove()" class="text-white/80 hover:text-white text-xs ml-3 font-bold">✕</button>
-          </div>
-        {% endfor %}
+    <div
+      id="toast-container"
+      class="fixed top-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full px-4 pointer-events-none"
+    >
+      {% for message in messages %}
+      <div
+        class="toast-item pointer-events-auto flex items-center justify-between p-4 rounded-2xl shadow-xl border transition-all duration-300 transform translate-y-0 opacity-100 {% if message.tags == 'success' %} bg-emerald-500 text-white border-emerald-400 {% elif message.tags == 'error' %} bg-rose-500 text-white border-rose-400 {% else %} bg-amber-500 text-white border-amber-400 {% endif %}"
+      >
+        <div class="flex items-center gap-2 text-sm font-medium">
+          {% if message.tags == 'success' %}
+            <span>✅</span>
+          {% elif message.tags == 'error' %}
+            <span>⚠️</span>
+          {% else %}
+            <span>✨</span>
+          {% endif %}
+          <span>{{ message }}</span>
+        </div>
+
+        <button
+          onclick="this.parentElement.remove()"
+          class="text-white/80 hover:text-white text-xs ml-3 font-bold"
+        >
+          ✕
+        </button>
       </div>
-    
-      <script>
-        setTimeout(() => {
-          const toasts = document.querySelectorAll('.toast-item');
-          toasts.forEach(toast => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(-10px)';
-            setTimeout(() => toast.remove(), 300);
-          });
-        }, 3500);
-      </script>
+      {% endfor %}
+    </div>
+
+    <script>
+      setTimeout(() => {
+        const toasts = document.querySelectorAll(".toast-item");
+        toasts.forEach((toast) => {
+          toast.style.opacity = "0";
+          toast.style.transform = "translateY(-10px)";
+          setTimeout(() => toast.remove(), 300);
+        });
+      }, 3500);
+    </script>
     {% endif %}
 
     <!-- ระบบป้องกันการกดปุ่มซ้ำ (Double Submit) -->
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const forms = document.querySelectorAll('form');
-        
-        forms.forEach(form => {
-          form.addEventListener('submit', function() {
+      document.addEventListener("DOMContentLoaded", () => {
+        const forms = document.querySelectorAll("form");
+
+        forms.forEach((form) => {
+          form.addEventListener("submit", function () {
             const submitBtn = this.querySelector('button[type="submit"]');
-            
+
             if (submitBtn && !submitBtn.disabled) {
               setTimeout(() => {
                 submitBtn.disabled = true;
-                submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
+                submitBtn.classList.add("opacity-70", "cursor-not-allowed");
                 submitBtn.innerHTML = `
                   <span class="inline-flex items-center gap-2">
                     <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
@@ -237,24 +333,40 @@
     </script>
 
     <!-- Modal ยืนยันออกจากระบบ -->
-    <div id="logout-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl max-w-xs w-full p-6 text-center shadow-2xl border border-amber-100 transform transition-all scale-100">
-        <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+    <div
+      id="logout-modal"
+      class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-xs w-full p-6 text-center shadow-2xl border border-amber-100 transform transition-all scale-100"
+      >
+        <div
+          class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-3 text-xl"
+        >
           🚪
         </div>
-        
+
         <h3 class="text-base font-bold text-gray-800 mb-1">ออกจากระบบ?</h3>
-        <p class="text-xs text-gray-500 mb-5">คุณต้องการออกจากระบบ Sisaket Reviews ใช่หรือไม่</p>
-    
+        <p class="text-xs text-gray-500 mb-5">
+          คุณต้องการออกจากระบบ Sisaket Reviews ใช่หรือไม่
+        </p>
+
         <div class="flex gap-2">
-          <button type="button" onclick="closeLogoutModal()" class="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition">
+          <button
+            type="button"
+            onclick="closeLogoutModal()"
+            class="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition"
+          >
             ยกเลิก
           </button>
-    
+
           <!-- Django 5+ แนะนำให้ Logout ด้วย POST Form เพื่อความปลอดภัย -->
           <form method="POST" action="{% url 'logout' %}" class="flex-1">
             {% csrf_token %}
-            <button type="submit" class="w-full py-2 bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold rounded-xl transition shadow-sm">
+            <button
+              type="submit"
+              class="w-full py-2 bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold rounded-xl transition shadow-sm"
+            >
               ยืนยันออก
             </button>
           </form>
@@ -262,188 +374,423 @@
       </div>
     </div>
 
+    <!-- Modal รายงานรีวิว (Report Review Modal) -->
+    <div
+      id="report-modal"
+      class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-amber-100 transform transition-all relative animate-in fade-in zoom-in-95 duration-150"
+      >
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl shrink-0">
+              🚩
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-gray-800">รายงานรีวิว</h3>
+              <p id="report-modal-subtitle" class="text-xs text-gray-500">
+                โปรดเลือกเหตุผลที่ต้องการรายงาน
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="closeReportModal()"
+            class="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition"
+            title="ปิด"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Form -->
+        <form id="report-review-form" method="POST" action="">
+          {% csrf_token %}
+          
+          <div class="space-y-2 mb-4">
+            <label class="block text-xs font-semibold text-gray-700 mb-1">
+              ระบุเหตุผลในการรายงาน:
+            </label>
+
+            <label class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-200 hover:border-amber-400 hover:bg-amber-50/40 cursor-pointer transition">
+              <input type="radio" name="reason" value="profanity" checked class="text-amber-600 focus:ring-amber-500">
+              <span class="text-xs text-gray-800 font-medium">🤬 มีคำหยาบคายหรือไม่สุภาพ</span>
+            </label>
+
+            <label class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-200 hover:border-amber-400 hover:bg-amber-50/40 cursor-pointer transition">
+              <input type="radio" name="reason" value="fake" class="text-amber-600 focus:ring-amber-500">
+              <span class="text-xs text-gray-800 font-medium">📢 ข้อมูลเท็จ / สแปม / โฆษณา</span>
+            </label>
+
+            <label class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-200 hover:border-amber-400 hover:bg-amber-50/40 cursor-pointer transition">
+              <input type="radio" name="reason" value="inappropriate_img" class="text-amber-600 focus:ring-amber-500">
+              <span class="text-xs text-gray-800 font-medium">🔞 รูปภาพไม่เหมาะสมหรือลามก</span>
+            </label>
+
+            <label class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-200 hover:border-amber-400 hover:bg-amber-50/40 cursor-pointer transition">
+              <input type="radio" name="reason" value="other" class="text-amber-600 focus:ring-amber-500">
+              <span class="text-xs text-gray-800 font-medium">💬 อื่นๆ</span>
+            </label>
+          </div>
+
+          <div class="mb-5">
+            <label for="report-details" class="block text-xs font-semibold text-gray-700 mb-1.5">
+              รายละเอียดเพิ่มเติม (ไม่บังคับ):
+            </label>
+            <textarea
+              id="report-details"
+              name="details"
+              rows="3"
+              placeholder="อธิบายเพิ่มเติมเพื่อให้ทีมงานตรวจสอบได้ง่ายขึ้น..."
+              class="w-full text-xs p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+            ></textarea>
+          </div>
+
+          <div class="flex gap-2.5">
+            <button
+              type="button"
+              onclick="closeReportModal()"
+              class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition"
+            >
+              ยกเลิก
+            </button>
+            <button
+              type="submit"
+              class="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold rounded-xl transition shadow-sm"
+            >
+              ส่งรายงาน
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Modal แสดงรายละเอียดเหรียญตราความสำเร็จ (Badge Detail Modal) -->
-    <div id="badge-detail-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-amber-100 transform transition-all relative animate-in fade-in zoom-in-95 duration-150">
+    <div
+      id="badge-detail-modal"
+      class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-amber-100 transform transition-all relative animate-in fade-in zoom-in-95 duration-150"
+      >
         <!-- ปุ่มปิดมุมขวาบน -->
-        <button type="button" onclick="closeBadgeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition" title="ปิด">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <button
+          type="button"
+          onclick="closeBadgeModal()"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition"
+          title="ปิด"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
 
         <!-- ไอคอนเหรียญขนาดใหญ่ -->
-        <div id="badge-modal-icon-container" class="w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-inner border mb-3 mt-1">
+        <div
+          id="badge-modal-icon-container"
+          class="w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-inner border mb-3 mt-1"
+        >
           <span id="badge-modal-icon">🎖️</span>
         </div>
-        
+
         <!-- ชื่อเหรียญ -->
-        <h3 id="badge-modal-name" class="text-xl font-bold text-gray-800 mb-1">ชื่อเหรียญตรา</h3>
-        
+        <h3 id="badge-modal-name" class="text-xl font-bold text-gray-800 mb-1">
+          ชื่อเหรียญตรา
+        </h3>
+
         <!-- แถบประเภท -->
         <div class="mb-4">
-          <span id="badge-modal-tag" class="inline-block px-3 py-0.5 rounded-full text-xs font-semibold">
+          <span
+            id="badge-modal-tag"
+            class="inline-block px-3 py-0.5 rounded-full text-xs font-semibold"
+          >
             🎖️ เหรียญตราความสำเร็จ
           </span>
         </div>
 
         <!-- รายละเอียดและเงื่อนไข -->
-        <div class="bg-amber-50/40 rounded-2xl p-4 mb-5 text-left border border-amber-100/80 space-y-2.5">
+        <div
+          class="bg-amber-50/40 rounded-2xl p-4 mb-5 text-left border border-amber-100/80 space-y-2.5"
+        >
           <div>
-            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5">คำอธิบาย</span>
-            <p id="badge-modal-desc" class="text-xs text-gray-700 font-medium leading-relaxed"></p>
+            <span
+              class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-0.5"
+              >คำอธิบาย</span
+            >
+            <p
+              id="badge-modal-desc"
+              class="text-xs text-gray-700 font-medium leading-relaxed"
+            ></p>
           </div>
           <div class="border-t border-amber-100/60 pt-2">
-            <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wider block mb-0.5">🎯 เงื่อนไขการปลดล็อก</span>
-            <p id="badge-modal-condition" class="text-xs text-gray-800 font-semibold leading-relaxed"></p>
+            <span
+              class="text-[11px] font-bold text-amber-700 uppercase tracking-wider block mb-0.5"
+              >🎯 เงื่อนไขการปลดล็อก</span
+            >
+            <p
+              id="badge-modal-condition"
+              class="text-xs text-gray-800 font-semibold leading-relaxed"
+            ></p>
           </div>
         </div>
 
         <!-- ปุ่มปิด modal -->
-        <button type="button" onclick="closeBadgeModal()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition shadow-sm hover:shadow">
+        <button
+          type="button"
+          onclick="closeBadgeModal()"
+          class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition shadow-sm hover:shadow"
+        >
           เข้าใจแล้ว
         </button>
       </div>
     </div>
-    
+
     <script>
       // ควบคุม Dropdown ผู้ใช้
-      const userMenuBtn = document.getElementById('user-menu-btn');
-      const userDropdown = document.getElementById('user-dropdown');
-    
+      const userMenuBtn = document.getElementById("user-menu-btn");
+      const userDropdown = document.getElementById("user-dropdown");
+
       if (userMenuBtn && userDropdown) {
-        userMenuBtn.addEventListener('click', (e) => {
+        userMenuBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          userDropdown.classList.toggle('hidden');
+          userDropdown.classList.toggle("hidden");
         });
-    
-        document.addEventListener('click', (e) => {
-          if (!userDropdown.contains(e.target) && !userMenuBtn.contains(e.target)) {
-            userDropdown.classList.add('hidden');
+
+        document.addEventListener("click", (e) => {
+          if (
+            !userDropdown.contains(e.target) &&
+            !userMenuBtn.contains(e.target)
+          ) {
+            userDropdown.classList.add("hidden");
           }
         });
       }
-    
+
       // ควบคุม Modal ยืนยันการออกจากระบบ
       function openLogoutModal() {
-        if (userDropdown) userDropdown.classList.add('hidden');
-        document.getElementById('logout-modal').classList.remove('hidden');
+        if (userDropdown) userDropdown.classList.add("hidden");
+        document.getElementById("logout-modal").classList.remove("hidden");
       }
-    
-      document.getElementById('logout-modal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('logout-modal')) {
+
+      document.getElementById("logout-modal").addEventListener("click", (e) => {
+        if (e.target === document.getElementById("logout-modal")) {
           closeLogoutModal();
         }
       });
-    
+
       function closeLogoutModal() {
-        document.getElementById('logout-modal').classList.add('hidden');
+        document.getElementById("logout-modal").classList.add("hidden");
       }
 
       // ควบคุม Modal รายละเอียดเหรียญตรา (Badge Detail Modal)
       function openBadgeModal(badge) {
         if (!badge) return;
-        const modal = document.getElementById('badge-detail-modal');
-        const icon = document.getElementById('badge-modal-icon');
-        const iconContainer = document.getElementById('badge-modal-icon-container');
-        const name = document.getElementById('badge-modal-name');
-        const desc = document.getElementById('badge-modal-desc');
-        const condition = document.getElementById('badge-modal-condition');
-        const tag = document.getElementById('badge-modal-tag');
+        const modal = document.getElementById("badge-detail-modal");
+        const icon = document.getElementById("badge-modal-icon");
+        const iconContainer = document.getElementById(
+          "badge-modal-icon-container",
+        );
+        const name = document.getElementById("badge-modal-name");
+        const desc = document.getElementById("badge-modal-desc");
+        const condition = document.getElementById("badge-modal-condition");
+        const tag = document.getElementById("badge-modal-tag");
 
-        if (icon) icon.textContent = badge.icon || '🎖️';
-        if (name) name.textContent = badge.name || '';
-        if (desc) desc.textContent = badge.desc || '';
-        if (condition) condition.textContent = badge.condition || badge.desc || '';
+        if (icon) icon.textContent = badge.icon || "🎖️";
+        if (name) name.textContent = badge.name || "";
+        if (desc) desc.textContent = badge.desc || "";
+        if (condition)
+          condition.textContent = badge.condition || badge.desc || "";
 
         if (iconContainer && badge.color) {
-          iconContainer.className = 'w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-inner border mb-3 mt-1 ' + badge.color;
+          iconContainer.className =
+            "w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl shadow-inner border mb-3 mt-1 " +
+            badge.color;
         }
         if (tag && badge.color) {
-          tag.className = 'inline-block px-3 py-0.5 rounded-full text-xs font-semibold ' + badge.color;
-          tag.textContent = badge.name ? ('🎖️ ' + badge.name) : '🎖️ เหรียญตราความสำเร็จ';
+          tag.className =
+            "inline-block px-3 py-0.5 rounded-full text-xs font-semibold " +
+            badge.color;
+          tag.textContent = badge.name
+            ? "🎖️ " + badge.name
+            : "🎖️ เหรียญตราความสำเร็จ";
         }
 
         if (modal) {
-          modal.classList.remove('hidden');
+          modal.classList.remove("hidden");
         }
       }
 
       function closeBadgeModal() {
-        const modal = document.getElementById('badge-detail-modal');
-        if (modal) modal.classList.add('hidden');
+        const modal = document.getElementById("badge-detail-modal");
+        if (modal) modal.classList.add("hidden");
       }
 
-      document.getElementById('badge-detail-modal')?.addEventListener('click', (e) => {
-        if (e.target === document.getElementById('badge-detail-modal')) {
-          closeBadgeModal();
+      document
+        .getElementById("badge-detail-modal")
+        ?.addEventListener("click", (e) => {
+          if (e.target === document.getElementById("badge-detail-modal")) {
+            closeBadgeModal();
+          }
+        });
+
+      // ควบคุม Modal รายงานรีวิว (Report Modal)
+      function openReportModal(reviewId, placeName, authorName) {
+        document.querySelectorAll("details.review-menu[open]").forEach((details) => {
+          details.removeAttribute("open");
+        });
+
+        const form = document.getElementById("report-review-form");
+        const modal = document.getElementById("report-modal");
+        const subtitle = document.getElementById("report-modal-subtitle");
+        const detailsInput = document.getElementById("report-details");
+
+        if (form) {
+          form.action = `/review/${reviewId}/report/`;
         }
-      });
+        if (detailsInput) {
+          detailsInput.value = "";
+        }
+        const defaultRadio = form ? form.querySelector('input[name="reason"][value="profanity"]') : null;
+        if (defaultRadio) {
+          defaultRadio.checked = true;
+        }
+
+        if (subtitle) {
+          let desc = "โปรดเลือกเหตุผลที่ต้องการรายงาน";
+          if (authorName) {
+            desc = `รายงานรีวิวของ @${authorName}`;
+            if (placeName) desc += ` (สถานที่: ${placeName})`;
+          }
+          subtitle.textContent = desc;
+        }
+
+        if (modal) {
+          modal.classList.remove("hidden");
+        }
+      }
+
+      function closeReportModal() {
+        const modal = document.getElementById("report-modal");
+        if (modal) modal.classList.add("hidden");
+      }
+
+      document
+        .getElementById("report-modal")
+        ?.addEventListener("click", (e) => {
+          if (e.target === document.getElementById("report-modal")) {
+            closeReportModal();
+          }
+        });
     </script>
 
     <!-- Lightbox Modal สำหรับดูภาพขนาดเต็ม -->
-    <div id="image-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300" onclick="closeImageModal()">
+    <div
+      id="image-modal"
+      class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300"
+      onclick="closeImageModal()"
+    >
       <!-- ปุ่มกากบาทปิดมุมขวาบน -->
-      <button type="button" class="absolute top-5 right-5 text-white text-3xl font-bold hover:text-amber-400 z-10 p-2" onclick="closeImageModal()">
+      <button
+        type="button"
+        class="absolute top-5 right-5 text-white text-3xl font-bold hover:text-amber-400 z-10 p-2"
+        onclick="closeImageModal()"
+      >
         ✕
       </button>
-      
+
       <!-- รูปภาพขนาดเต็ม (คลิกที่รูปแล้วไม่ปิด modal) -->
-      <div class="max-w-4xl max-h-[90vh] flex items-center justify-center" onclick="event.stopPropagation()">
-        <img id="modal-img" src="" alt="ภาพขนาดเต็ม" class="max-w-full max-h-[85vh] object-contain rounded-none shadow-2xl">
+      <div
+        class="max-w-4xl max-h-[90vh] flex items-center justify-center"
+        onclick="event.stopPropagation()"
+      >
+        <img
+          id="modal-img"
+          src=""
+          alt="ภาพขนาดเต็ม"
+          class="max-w-full max-h-[85vh] object-contain rounded-none shadow-2xl"
+        />
       </div>
     </div>
 
     <script>
       function openImageModal(imgSrc) {
-        const modal = document.getElementById('image-modal');
-        const modalImg = document.getElementById('modal-img');
-        
+        const modal = document.getElementById("image-modal");
+        const modalImg = document.getElementById("modal-img");
+
         modalImg.src = imgSrc;
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden'; // ล็อกไม่ให้หน้าเว็บเลื่อนตอนดูรูป
+        modal.classList.remove("hidden");
+        document.body.style.overflow = "hidden"; // ล็อกไม่ให้หน้าเว็บเลื่อนตอนดูรูป
       }
 
       function closeImageModal() {
-        const modal = document.getElementById('image-modal');
-        modal.classList.add('hidden');
-        document.body.style.overflow = ''; // คืนค่าให้หน้าเว็บเลื่อนได้ปกติ
+        const modal = document.getElementById("image-modal");
+        modal.classList.add("hidden");
+        document.body.style.overflow = ""; // คืนค่าให้หน้าเว็บเลื่อนได้ปกติ
       }
 
       // กดปุ่ม Esc บนคีย์บอร์ดเพื่อปิดได้ด้วย
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
           closeImageModal();
         }
       });
     </script>
 
     <!-- Floating Action Button (FAB) รีวิวด่วนมุมขวาล่าง -->
-    <a 
-      href="{% url 'quick_review' %}" 
+    <a
+      href="{% url 'quick_review' %}"
       class="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 bg-amber-500 hover:bg-amber-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 group"
       title="เขียนรีวิวด่วน"
     >
       <!-- ไอคอนเครื่องหมายบวก (+) -->
-      <svg class="w-7 h-7 transition-transform duration-200 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+      <svg
+        class="w-7 h-7 transition-transform duration-200 group-hover:rotate-90"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.5"
+          d="M12 4v16m8-8H4"
+        ></path>
       </svg>
     </a>
 
     <!-- ระบบจำตำแหน่ง Scroll Position อัตโนมัติ -->
     <script>
       // 1. จำตำแหน่ง Scroll ก่อนออกจากหน้านั้น
-      window.addEventListener('beforeunload', function () {
-        sessionStorage.setItem('scrollPos_' + window.location.pathname, window.scrollY);
+      window.addEventListener("beforeunload", function () {
+        sessionStorage.setItem(
+          "scrollPos_" + window.location.pathname,
+          window.scrollY,
+        );
       });
 
       // 2. เมื่อโหลดหน้าเว็บเสร็จ ตรวจสอบว่ามีตำแหน่งเดิมบันทึกไว้ไหม
-      window.addEventListener('load', function () {
-        const savedPos = sessionStorage.getItem('scrollPos_' + window.location.pathname);
+      window.addEventListener("load", function () {
+        const savedPos = sessionStorage.getItem(
+          "scrollPos_" + window.location.pathname,
+        );
         if (savedPos !== null) {
           window.scrollTo({
             top: parseInt(savedPos, 10),
-            behavior: 'instant' // เลื่อนกลับตำแหน่งเดิมทันที ไม่ต้องทำอนิเมชั่นเลื่อนให้ตาลาย
+            behavior: "instant", // เลื่อนกลับตำแหน่งเดิมทันที ไม่ต้องทำอนิเมชั่นเลื่อนให้ตาลาย
           });
         }
       });
