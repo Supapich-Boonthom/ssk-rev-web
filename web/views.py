@@ -192,7 +192,7 @@ def place_list(request):
         reviews_qs = (
             Review.objects.filter(place__is_approved=True)
             .select_related("place", "user__profile")
-            .prefetch_related("images", "comments__user")
+            .prefetch_related("images", "comments__user__profile")
         )
         if feed_filter == "latest":
             recent_reviews = reviews_qs.annotate(likes_count=Count("likes")).order_by(
@@ -249,7 +249,7 @@ def place_detail(request, pk):
     reviews = list(
         place.reviews.annotate(likes_count=Count("likes"))
         .select_related("user__profile")
-        .prefetch_related("tags", "images", "comments__user")
+        .prefetch_related("tags", "images", "comments__user__profile")
         .order_by("-likes_count", "-created_at")
     )
     prefetch_user_badges(reviews)

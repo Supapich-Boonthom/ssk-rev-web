@@ -532,10 +532,14 @@
             <div class="p-5 overflow-y-auto space-y-3.5 flex-1">
               {% for comment in review.comments.all %}
                 <div class="flex items-start gap-3">
-                  <!-- วงกลมตัวย่อชื่อแบบ AD admin -->
-                  <div class="w-8 h-8 rounded-full bg-amber-500/10 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0 uppercase">
-                    {{ comment.user.username|slice:":2" }}
-                  </div>
+                  <!-- รูปโปรไฟล์ผู้คอมเมนต์ -->
+                  {% if comment.user.profile.avatar %}
+                    <img src="{{ comment.user.profile.avatar_url }}" alt="{{ comment.user.username }}" class="w-8 h-8 rounded-full object-cover shrink-0 border border-amber-100 shadow-2xs">
+                  {% else %}
+                    <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs shrink-0 uppercase border border-amber-200/50">
+                      {{ comment.user.username|slice:":2"|upper }}
+                    </div>
+                  {% endif %}
 
                   <div class="flex-1 bg-gray-50 rounded-2xl px-3.5 py-2.5">
                     <div class="flex items-center gap-2 mb-1">
@@ -563,9 +567,14 @@
               {% if user.is_authenticated %}
                 <form action="{% url 'add_comment' review.id %}" method="POST" class="flex items-center gap-2 m-0">
                   {% csrf_token %}
-                  <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs font-bold shrink-0 uppercase">
-                    {{ user.username|slice:":2" }}
-                  </div>
+                  <!-- รูปโปรไฟล์ผู้ใช้ปัจจุบันที่กำลังพิมพ์ -->
+                  {% if user.profile.avatar %}
+                    <img src="{{ user.profile.avatar_url }}" alt="{{ user.username }}" class="w-8 h-8 rounded-full object-cover shrink-0 border border-amber-200 shadow-2xs">
+                  {% else %}
+                    <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0 uppercase shadow-2xs">
+                      {{ user.username|slice:":2"|upper }}
+                    </div>
+                  {% endif %}
                   <input type="text" 
                          name="content" 
                          placeholder="พิมพ์ข้อความพูดคุย..." 
