@@ -8,11 +8,11 @@ from cloudinary.models import CloudinaryField
 from .utils import optimize_image
 
 CATEGORY_CHOICES = [
-    ("cafe", "คาเฟ่ / ร้านอาหาร"),
-    ("temple", "วัด / โบราณสถาน"),
     ("nature", "ธรรมชาติ / สวนสาธารณะ"),
+    ("temple", "วัด / โบราณสถาน"),
     ("learning", "พิพิธภัณฑ์ / แหล่งเรียนรู้"),
     ("market", "ตลาด / ถนนคนเดิน"),
+    ("cafe", "คาเฟ่ / ร้านอาหาร"),
     ("other", "อื่นๆ"),
 ]
 
