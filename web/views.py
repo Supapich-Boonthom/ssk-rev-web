@@ -287,12 +287,24 @@ def place_detail(request, pk):
             messages.success(request, "บันทึกรีวิวของคุณเรียบร้อยแล้ว!")
             return redirect("place_detail", pk=pk)
 
+    community_photos = []
+    for r in reviews:
+        for img in r.images.all():
+            community_photos.append(img.image.url)
+        if r.image:
+            try:
+                if r.image.url not in community_photos:
+                    community_photos.append(r.image.url)
+            except Exception:
+                pass
+
     return render(
         request,
         "place_detail.html",
         {
             "place": place,
             "reviews": reviews,
+            "community_photos": community_photos,
             "form": form,
             "user_liked_review_ids": list(user_liked_review_ids),
             "is_bookmarked": is_bookmarked,
