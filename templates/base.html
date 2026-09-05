@@ -832,5 +832,74 @@
         }
       });
     </script>
+    <!-- ระบบกดถูกใจรีวิวผ่าน AJAX (ไม่ต้องรีโหลดหน้าเว็บ และตำแหน่ง Scroll ไม่ดีด) -->
+    <script>
+      function toggleLike(btn, reviewId) {
+        if (!btn || btn.dataset.loading === 'true') return;
+        btn.dataset.loading = 'true';
+
+        const icon = btn.querySelector('.like-icon');
+        const countSpan = btn.querySelector('.like-count');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                          document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
+
+        fetch(`/review/${reviewId}/like/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+          }
+        })
+        .then(res => {
+          if (res.status === 401) {
+            return res.json().then(data => {
+              window.location.href = data.login_url || '/login/';
+            });
+          }
+          if (!res.ok) throw new Error('Network response was not ok');
+          return res.json();
+        })
+        .then(data => {
+          if (!data) return;
+
+          // อัปเดตไอคอนหัวใจ + แอนิเมชันป๊อปเบาๆ
+          if (icon) {
+            icon.classList.add('scale-125');
+            setTimeout(() => icon.classList.remove('scale-125'), 150);
+
+            if (data.is_liked) {
+              icon.classList.remove('text-gray-400');
+              icon.classList.add('text-rose-500', 'fill-current');
+            } else {
+              icon.classList.remove('text-rose-500', 'fill-current');
+              icon.classList.add('text-gray-400');
+            }
+          }
+
+          // อัปเดตจำนวนยอดถูกใจ
+          if (countSpan) {
+            countSpan.textContent = data.likes_count;
+            if (data.likes_count > 0) {
+              countSpan.classList.remove('hidden');
+            } else {
+              countSpan.classList.add('hidden');
+            }
+
+            if (data.is_liked) {
+              countSpan.classList.remove('text-gray-500');
+              countSpan.classList.add('text-rose-600');
+            } else {
+              countSpan.classList.remove('text-rose-600');
+              countSpan.classList.add('text-gray-500');
+            }
+          }
+        })
+        .catch(err => console.error('Error toggling like:', err))
+        .finally(() => {
+          btn.dataset.loading = 'false';
+        });
+      }
+    </script>
   </body>
 </html>
