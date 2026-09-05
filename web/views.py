@@ -214,10 +214,9 @@ def place_list(request):
     user_liked_review_ids = []
     user_bookmarked_place_ids = []
     if request.user.is_authenticated:
-        if tab == "feed":
-            user_liked_review_ids = ReviewLike.objects.filter(
-                user=request.user
-            ).values_list("review_id", flat=True)
+        user_liked_review_ids = ReviewLike.objects.filter(
+            user=request.user
+        ).values_list("review_id", flat=True)
         user_bookmarked_place_ids = Bookmark.objects.filter(
             user=request.user
         ).values_list("place_id", flat=True)

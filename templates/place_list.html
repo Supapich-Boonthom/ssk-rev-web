@@ -542,16 +542,16 @@
       
       <div class="flex items-center gap-5 text-xs">
         
-        <!-- ปุ่มมีประโยชน์: ถ้า 0 ซ่อนเลข / ถ้ามีคนกดค่อยโชว์ตัวเลขสีแดง -->
+        <!-- ปุ่มมีประโยชน์: หัวใจแดงเฉพาะเมื่อผู้ใช้เคยกดถูกใจแล้ว / ถ้ามีคนกดค่อยโชว์ตัวเลข -->
         <a href="{% url 'toggle_like' review.id %}" 
            class="inline-flex items-center gap-1.5 hover:text-rose-600 transition group cursor-pointer"
            title="มีประโยชน์">
-          <svg class="w-4 h-4 {% if review.likes_count > 0 %}text-rose-500 fill-current{% else %}text-gray-400 group-hover:text-rose-500{% endif %} transition" 
+          <svg class="w-4 h-4 {% if user.is_authenticated and review.id in user_liked_review_ids %}text-rose-500 fill-current{% else %}text-gray-400 group-hover:text-rose-500{% endif %} transition" 
                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
           {% if review.likes_count > 0 %}
-            <span class="font-semibold text-rose-600">{{ review.likes_count }}</span>
+            <span class="font-semibold {% if user.is_authenticated and review.id in user_liked_review_ids %}text-rose-600{% else %}text-gray-500 group-hover:text-rose-600{% endif %}">{{ review.likes_count }}</span>
           {% endif %}
         </a>
 
