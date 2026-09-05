@@ -196,16 +196,22 @@
 
                 <a
                   href="{% url 'place_list' %}"
-                  class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition"
+                  class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition group"
                 >
-                  <span>🏠</span> หน้าแรก
+                  <svg class="w-4 h-4 text-gray-500 group-hover:text-amber-600 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  <span>หน้าแรก</span>
                 </a>
 
                 <a
                   href="{% url 'profile' %}"
-                  class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition"
+                  class="flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition group"
                 >
-                  <span>👤</span> หน้าโปรไฟล์ของฉัน
+                  <svg class="w-4 h-4 text-gray-500 group-hover:text-amber-600 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>หน้าโปรไฟล์ของฉัน</span>
                 </a>
 
                 <div class="border-t border-gray-100 my-1"></div>
@@ -214,9 +220,12 @@
                 <button
                   type="button"
                   onclick="openLogoutModal()"
-                  class="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 transition text-left cursor-pointer"
+                  class="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 transition text-left cursor-pointer group"
                 >
-                  <span>🚪</span> ออกจากระบบ
+                  <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span>ออกจากระบบ</span>
                 </button>
               </div>
             </div>
@@ -379,15 +388,18 @@
       <div
         class="bg-white rounded-3xl max-w-xs w-full p-6 text-center shadow-2xl border border-amber-100 transform transition-all scale-100"
       >
+        <!-- ไอคอนเวกเตอร์ SVG สีแดง -->
         <div
-          class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-3 text-xl"
+          class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-3"
         >
-          🚪
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
         </div>
 
         <h3 class="text-base font-bold text-gray-800 mb-1">ออกจากระบบ?</h3>
         <p class="text-xs text-gray-500 mb-5">
-          คุณต้องการออกจากระบบ Sisaket Reviews ใช่หรือไม่
+          คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ
         </p>
 
         <div class="flex gap-2">
@@ -406,7 +418,7 @@
               type="submit"
               class="w-full py-2 bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold rounded-xl transition shadow-sm"
             >
-              ยืนยันออก
+              ออกจากระบบ
             </button>
           </form>
         </div>
@@ -599,41 +611,24 @@
     </div>
 
     <script>
-      // ควบคุม Dropdown ผู้ใช้
-      const userMenuBtn = document.getElementById("user-menu-btn");
-      const userDropdown = document.getElementById("user-dropdown");
-
-      if (userMenuBtn && userDropdown) {
-        userMenuBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          userDropdown.classList.toggle("hidden");
-        });
-
-        document.addEventListener("click", (e) => {
-          if (
-            !userDropdown.contains(e.target) &&
-            !userMenuBtn.contains(e.target)
-          ) {
-            userDropdown.classList.add("hidden");
-          }
-        });
-      }
-
       // ควบคุม Modal ยืนยันการออกจากระบบ
       function openLogoutModal() {
-        if (userDropdown) userDropdown.classList.add("hidden");
-        document.getElementById("logout-modal").classList.remove("hidden");
+        const dropdown = document.getElementById("user-dropdown");
+        if (dropdown) dropdown.classList.add("hidden");
+        const modal = document.getElementById("logout-modal");
+        if (modal) modal.classList.remove("hidden");
       }
 
-      document.getElementById("logout-modal").addEventListener("click", (e) => {
+      function closeLogoutModal() {
+        const modal = document.getElementById("logout-modal");
+        if (modal) modal.classList.add("hidden");
+      }
+
+      document.getElementById("logout-modal")?.addEventListener("click", (e) => {
         if (e.target === document.getElementById("logout-modal")) {
           closeLogoutModal();
         }
       });
-
-      function closeLogoutModal() {
-        document.getElementById("logout-modal").classList.add("hidden");
-      }
 
       // ควบคุม Modal รายละเอียดเหรียญตรา (Badge Detail Modal)
       function openBadgeModal(badge) {

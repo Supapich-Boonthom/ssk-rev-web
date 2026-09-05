@@ -159,10 +159,40 @@
     </div>
   </div>
 
-  <!-- Review Section -->
-  <div class="mt-10">
-    <h2 class="text-xl font-bold text-gray-900 mb-6">
-      ความคิดเห็นและรีวิว ({{ reviews.count }})
+  <!-- 1. โซนคลังรูปภาพจากผู้ใช้รีวิว (Community Photos): แสดงเฉพาะเมื่อมีรูปภาพเท่านั้น -->
+  {% if community_photos %}
+  <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mt-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span>ภาพถ่ายจากผู้มาเยือน</span>
+      </h3>
+      <span class="text-xs text-gray-400">ภาพจากรีวิวจริง</span>
+    </div>
+
+    <!-- กริดแสดงรูปภาพขนาดกะทัดรัด -->
+    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
+      {% for photo_url in community_photos %}
+        <div class="aspect-square rounded-xl overflow-hidden bg-gray-100 group relative border border-gray-100 shadow-2xs">
+          <img src="{{ photo_url }}" 
+               alt="ภาพจากรีวิว" 
+               onclick="openImageModal(this.src)"
+               title="คลิกเพื่อดูภาพขนาดเต็ม"
+               class="w-full h-full object-cover transition duration-200 group-hover:scale-105 cursor-pointer"
+               loading="lazy">
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 2. หัวข้อความคิดเห็น: ซ่อนวงเล็บถ้ายังไม่มีรีวิว ป้องกันบั๊กวงเล็บว่าง () -->
+  <div class="mt-8">
+    <h2 class="text-lg font-bold text-gray-900 mb-4">
+      ความคิดเห็นและรีวิว {% if reviews|length > 0 %}({{ reviews|length }}){% endif %}
     </h2>
 
     <!-- Review Form Box -->
