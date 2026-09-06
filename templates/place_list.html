@@ -349,38 +349,16 @@
 
 <div class="max-w-2xl mx-auto space-y-6">
   {% for review in recent_reviews %}
-  <div id="review-{{ review.id }}" class="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-    <!-- 1. ส่วน Header (ชื่อ + วันที่ + ดาว) -->
-    <div class="flex items-start justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <!-- รูปโปรไฟล์ Avatar -->
-        <a
-          href="{% url 'user_profile' review.user.username %}"
-          class="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-amber-100 hover:opacity-80 transition block"
-        >
-          {% if review.user.profile.avatar %}
-          <img
-            src="{{ review.user.profile.avatar_url }}"
-            alt="{{ review.user.username }}"
-            class="w-full h-full object-cover"
-          />
-          {% else %}
-          <div
-            class="w-full h-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm"
-          >
-            {{ review.user.username|slice:":2"|upper }}
-          </div>
-          {% endif %}
+  <div id="review-{{ review.id }}" class="bg-white rounded-3xl border border-gray-100 p-5 sm:p-6 shadow-sm">
+    <!-- ข้อมูลผู้โพสต์ -->
+    <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center gap-2.5">
+        <a href="{% url 'user_profile' review.user.username %}" class="shrink-0">
+          <img src="{{ review.user.profile.avatar_url }}" class="w-10 h-10 rounded-full object-cover shrink-0" alt="{{ review.user.username }}">
         </a>
-
         <div>
-          <div class="flex items-center gap-2 flex-wrap">
-            <a
-              href="{% url 'user_profile' review.user.username %}"
-              class="text-sm font-semibold text-gray-800 hover:text-amber-600 transition"
-            >
-              {{ review.user.username }}
-            </a>
+          <div class="flex items-center gap-1.5 leading-none">
+            <a href="{% url 'user_profile' review.user.username %}" class="font-bold text-gray-900 text-sm hover:text-amber-600 transition">{{ review.user.username }}</a>
             {% with badge=review.user.profile.get_active_badge %}
             {% if badge %}
             <button
@@ -392,145 +370,203 @@
                     condition: '{{ badge.condition|escapejs }}',
                     color: '{{ badge.color|escapejs }}'
                   })"
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border {{ badge.color }} hover:scale-105 transition shadow-2xs cursor-pointer"
+              class="text-[10px] bg-amber-50 text-amber-700 border border-amber-200/80 px-1.5 py-0.5 rounded-full font-medium leading-none cursor-pointer"
               title="คลิกเพื่อดูรายละเอียดเหรียญตรา"
             >
-              <span>{{ badge.icon }}</span>
-              <span>{{ badge.name }}</span>
+              {{ badge.icon }} {{ badge.name }}
             </button>
             {% endif %}
             {% endwith %}
           </div>
-          <div class="text-[11px] text-gray-400 mt-0.5">
-            {{ review.created_at|date:"d M Y เวลา H:i น." }}
-          </div>
+          <span class="text-[11px] text-gray-400 block mt-1">{{ review.created_at|date:"d M Y" }}</span>
         </div>
       </div>
 
-      <!-- คะแนนดาว + จุดสามจุดจัดการครบวงจร -->
-      <div class="flex items-center gap-2">
-        <!-- 1. คะแนนดาว -->
-        <span class="text-xs font-bold text-amber-500 shrink-0">
-          ★ {{ review.rating }}/5 ดาว
-        </span>
+      <!-- เมนูสามจุดจัดการ -->
+      <div class="relative inline-block text-left shrink-0">
+        <details class="group relative review-menu">
+          <summary class="list-none text-gray-400 hover:text-gray-600 p-1 cursor-pointer transition flex items-center justify-center [&::-webkit-details-marker]:hidden leading-none text-base">
+            ⋮
+          </summary>
+          <div class="absolute right-0 mt-1 w-32 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-30">
+            {% if request.user == review.user %}
+              <!-- สิทธิ์เจ้าของ: แก้ไข -->
+              <a href="{% url 'edit_review' review.pk %}" 
+                 class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2 transition">
+                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/>
+                </svg>
+                <span>แก้ไข</span>
+              </a>
 
-        <!-- 2. เมนูจุดสามจุด (⋮) -->
-        <div class="relative inline-block text-left">
-          <details class="group relative review-menu">
-            <summary class="list-none p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full cursor-pointer transition flex items-center justify-center [&::-webkit-details-marker]:hidden">
-              <!-- ไอคอน 3 จุดแนวตั้ง -->
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-              </svg>
-            </summary>
-
-            <!-- กล่อง Dropdown ที่เด้งลงมา -->
-            <div class="absolute right-0 mt-1 w-32 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-30">
-              {% if request.user == review.user %}
-                <!-- สิทธิ์เจ้าของ: แก้ไข -->
-                <a href="{% url 'edit_review' review.pk %}" 
-                   class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2 transition">
-                  <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/>
-                  </svg>
-                  <span>แก้ไข</span>
-                </a>
-
-                <!-- สิทธิ์เจ้าของ: ลบ -->
-                <form action="{% url 'delete_review' review.pk %}" method="POST" onsubmit="return confirm('ยืนยันการลบรีวิวนี้?');" class="m-0">
-                  {% csrf_token %}
-                  <button type="submit" class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition cursor-pointer">
-                    <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                    <span>ลบรีวิว</span>
-                  </button>
-                </form>
-
-              {% elif request.user.is_authenticated %}
-                <!-- สิทธิ์คนอื่น: รายงาน -->
-                <button
-                  type="button"
-                  onclick="openReportModal('{{ review.pk }}', '{{ review.place.name|escapejs }}', '{{ review.user.username|escapejs }}')"
-                  class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition cursor-pointer"
-                >
+              <!-- สิทธิ์เจ้าของ: ลบ -->
+              <form action="{% url 'delete_review' review.pk %}" method="POST" onsubmit="return confirm('ยืนยันการลบรีวิวนี้?');" class="m-0">
+                {% csrf_token %}
+                <button type="submit" class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition cursor-pointer">
                   <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                   </svg>
-                  <span>รายงาน</span>
+                  <span>ลบรีวิว</span>
                 </button>
-              {% else %}
-                <a href="{% url 'login' %}?next={{ request.get_full_path }}" 
-                   class="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2 transition">
-                  <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
-                  </svg>
-                  <span>รายงาน</span>
-                </a>
-              {% endif %}
-            </div>
-          </details>
-        </div>
+              </form>
+
+            {% elif request.user.is_authenticated %}
+              <!-- สิทธิ์คนอื่น: รายงาน -->
+              <button
+                type="button"
+                onclick="openReportModal('{{ review.pk }}', '{{ review.place.name|escapejs }}', '{{ review.user.username|escapejs }}')"
+                class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 transition cursor-pointer"
+              >
+                <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+                </svg>
+                <span>รายงาน</span>
+              </button>
+            {% else %}
+              <a href="{% url 'login' %}?next={{ request.get_full_path }}" 
+                 class="w-full text-left px-3 py-1.5 text-xs text-gray-600 hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2 transition">
+                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+                </svg>
+                <span>รายงาน</span>
+              </a>
+            {% endif %}
+          </div>
+        </details>
       </div>
     </div>
 
-    <!-- 2. จุดเช็คอินกลับมาที่เดิม (คุม Margin ให้กระชับ ไม่ทิ้งช่วงโหว่) -->
-    <div class="mt-2.5 mb-2">
-      <a
-        href="{% url 'place_detail' review.place.pk %}"
-        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50/70 hover:bg-amber-100/70 text-xs font-medium text-gray-700 transition"
-      >
+    <!-- แถวดาวขนาดพอดีอักษร + แคปซูลสถานที่ -->
+    <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+      <!-- แถวดาว: ปรับเป็น text-base และลด tracking ไม่ให้ห่างเกินไป -->
+      <div class="flex items-center text-amber-400 text-base leading-none tracking-tight">
+        {% for i in "12345" %}{% if forloop.counter <= review.rating %}<span>★</span>{% else %}<span class="text-gray-200">★</span>{% endif %}{% endfor %}
+      </div>
+
+      <!-- แท็กสถานที่ -->
+      {% if review.place %}
+      <a href="{% url 'place_detail' review.place.id %}" class="inline-flex items-center gap-1 text-[11px] bg-gray-50 hover:bg-amber-50 text-gray-600 hover:text-amber-700 px-2 py-0.5 rounded-full border border-gray-200 transition">
         <span>📍</span>
-        <span class="text-amber-700 font-semibold">เช็คอินที่:</span>
-        <span class="font-bold text-gray-800 hover:text-amber-700">{{ review.place.name }}</span>
+        <span class="font-medium truncate max-w-[200px]">{{ review.place.name }}</span>
       </a>
+      {% endif %}
     </div>
 
-    <!-- 3. ข้อความรีวิว (จะต่อลงมาแบบพอดี ไม่เคว้ง) -->
-    <p class="text-sm text-gray-800 leading-relaxed font-normal whitespace-pre-line">
-      {{ review.comment }}
-    </p>
+    <!-- ข้อความรีวิว พร้อมระบบตัดคำและปุ่ม "ดูเพิ่มเติม" -->
+    <div class="mb-3 text-sm text-gray-800 leading-snug">
+      {% if review.comment|length > 90 %}
+        <!-- ข้อความสั้น (จำกัด 2 บรรทัด) -->
+        <p id="comment-short-{{ review.id }}" class="line-clamp-2 m-0 inline">
+          {{ review.comment }}
+        </p>
+        <!-- ข้อความเต็ม (ซ่อนไว้ก่อน) -->
+        <p id="comment-full-{{ review.id }}" class="hidden m-0">
+          {{ review.comment|linebreaksbr }}
+        </p>
+        <!-- ปุ่มดูเพิ่มเติม -->
+        <button 
+          type="button" 
+          id="btn-more-{{ review.id }}"
+          onclick="toggleComment('{{ review.id }}')"
+          class="text-xs font-semibold text-teal-700 hover:text-teal-900 ml-1 inline-block focus:outline-none cursor-pointer"
+        >
+          เพิ่มเติม
+        </button>
+      {% else %}
+        <p class="m-0">{{ review.comment|linebreaksbr }}</p>
+      {% endif %}
+    </div>
 
     <!-- Review Photo -->
     {% if review.images.all %}
-      {% if review.images.all|length == 1 %}
-      <div class="mt-3 w-full max-h-96 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 flex items-center justify-center">
-        {% for img_obj in review.images.all %}
-        <img
-          src="{{ img_obj.image.url }}"
-          alt="รูปรีวิว"
-          onclick="openImageModal(this.src)"
-          class="w-full h-full max-h-96 object-cover cursor-pointer hover:opacity-95 transition"
-          title="คลิกเพื่อดูภาพขนาดเต็ม"
-          loading="lazy"
-        />
-        {% endfor %}
-      </div>
-      {% else %}
-      <div class="flex gap-2.5 overflow-x-auto py-2 no-scrollbar mt-3">
-        {% for img_obj in review.images.all %}
-        <div
-          class="shrink-0 w-36 h-28 sm:w-44 sm:h-32 rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 cursor-pointer"
-        >
-          <img
-            src="{{ img_obj.image.url }}"
-            alt="รูปภาพรีวิว"
-            onclick="openImageModal(this.src)"
-            class="w-full h-full object-cover hover:scale-105 transition duration-200"
-            title="คลิกเพื่อดูภาพขนาดเต็ม"
-            loading="lazy"
-          />
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
+      {% with count=review.images.all|length %}
+        {% if count == 1 %}
+          <!-- 1 รูป: เต็มใบ สัดส่วนสวยงาม -->
+          <div class="my-3 w-full aspect-[16/9] sm:aspect-[4/3] max-h-96 rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 shadow-2xs">
+            <img
+              src="{{ review.images.first.image.url }}"
+              alt="รูปรีวิว"
+              onclick="openImageModal(this.src)"
+              class="w-full h-full object-cover cursor-pointer hover:opacity-95 hover:scale-[1.02] transition duration-200"
+              title="คลิกเพื่อดูภาพขนาดเต็ม"
+              loading="lazy"
+            />
+          </div>
+
+        {% elif count == 2 %}
+          <!-- 2 รูป: ผ่าครึ่งซ้ายขวา สัดส่วนเท่ากัน รอยต่อบาง 2px -->
+          <div class="my-3 w-full rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 shadow-2xs">
+            <div class="grid grid-cols-2 gap-[2px] w-full aspect-[16/9] sm:aspect-[2/1] max-h-96 bg-white">
+              {% for img in review.images.all %}
+              <div class="relative w-full h-full overflow-hidden bg-gray-100 group">
+                <img
+                  src="{{ img.image.url }}"
+                  alt="รูปภาพรีวิว"
+                  onclick="openImageModal(this.src)"
+                  class="w-full h-full object-cover group-hover:scale-105 transition duration-300 cursor-pointer"
+                  title="คลิกเพื่อดูภาพขนาดเต็ม"
+                  loading="lazy"
+                />
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+        {% elif count == 3 %}
+          <!-- 3 รูป: ซ้าย 1 รูปใหญ่ ขวา 2 รูปเรียงซ้อน รอยต่อบาง 2px สัดส่วน 4:3 -->
+          <div class="my-3 w-full rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 shadow-2xs">
+            <div class="grid grid-cols-2 grid-rows-2 gap-[2px] w-full aspect-[4/3] max-h-[500px] bg-white">
+              {% for img in review.images.all %}
+              <div class="relative w-full h-full overflow-hidden bg-gray-100 group {% if forloop.first %}row-span-2{% endif %}">
+                <img
+                  src="{{ img.image.url }}"
+                  alt="รูปภาพรีวิว"
+                  onclick="openImageModal(this.src)"
+                  class="w-full h-full object-cover group-hover:scale-105 transition duration-300 cursor-pointer"
+                  title="คลิกเพื่อดูภาพขนาดเต็ม"
+                  loading="lazy"
+                />
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+        {% elif count >= 4 %}
+          <!-- 4 รูปขึ้นไป: Grid 4 ช่องสไตล์ Google Maps พร้อมตัวเลข +N สัดส่วน 4:3 -->
+          <div class="my-3 w-full rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 shadow-2xs">
+            <div class="grid grid-cols-2 grid-rows-2 gap-[2px] w-full aspect-[4/3] max-h-[500px] bg-white">
+              {% for img in review.images.all|slice:":4" %}
+              <div class="relative w-full h-full overflow-hidden bg-gray-100 group">
+                <img
+                  src="{{ img.image.url }}"
+                  alt="รูปภาพรีวิว"
+                  onclick="openImageModal(this.src)"
+                  class="w-full h-full object-cover group-hover:scale-105 transition duration-300 cursor-pointer"
+                  title="คลิกเพื่อดูภาพขนาดเต็ม"
+                  loading="lazy"
+                />
+                {% if forloop.counter == 4 and count > 4 %}
+                <div
+                  onclick="openImageModal('{{ img.image.url }}')"
+                  class="absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center text-white font-bold text-xl tracking-wider cursor-pointer hover:bg-black/60 transition select-none"
+                  title="ดูรูปภาพเพิ่มเติม"
+                >
+                  +{{ count|add:"-3" }}
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      {% endwith %}
     {% elif review.image %}
-    <div class="mt-3 w-full max-h-96 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 flex items-center justify-center">
+    <div class="my-3 w-full aspect-[16/9] sm:aspect-[4/3] max-h-96 rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 shadow-2xs">
       <img
         src="{{ review.image.url }}"
         alt="รูปรีวิว"
         onclick="openImageModal(this.src)"
-        class="w-full h-full max-h-96 object-cover cursor-pointer hover:opacity-95 transition"
+        class="w-full h-full object-cover cursor-pointer hover:opacity-95 hover:scale-[1.02] transition duration-200"
         title="คลิกเพื่อดูภาพขนาดเต็ม"
         loading="lazy"
       />
@@ -538,7 +574,7 @@
     {% endif %}
 
     <!-- Footer & Actions (แถบล่างไอคอนมินิมอล: หัวใจ, คอมเมนต์, แชร์สากล) -->
-    <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-gray-500">
+    <div class="mt-1 pt-3 border-t border-gray-100 flex items-center justify-between text-gray-500">
       
       <div class="flex items-center gap-5 text-xs">
         
@@ -890,6 +926,23 @@
         details.removeAttribute("open");
       }
     });
-  });
+  // สลับการแสดงผลข้อความรีวิวแบบย่อ/เต็ม
+  function toggleComment(reviewId) {
+    const shortText = document.getElementById(`comment-short-${reviewId}`);
+    const fullText = document.getElementById(`comment-full-${reviewId}`);
+    const btn = document.getElementById(`btn-more-${reviewId}`);
+
+    if (fullText && shortText && btn) {
+      if (fullText.classList.contains('hidden')) {
+        shortText.classList.add('hidden');
+        fullText.classList.remove('hidden');
+        btn.textContent = 'ย่อลง';
+      } else {
+        shortText.classList.remove('hidden');
+        fullText.classList.add('hidden');
+        btn.textContent = 'เพิ่มเติม';
+      }
+    }
+  }
 </script>
 {% endblock %}
