@@ -233,16 +233,23 @@
               </div>
             </div>
             {% else %}
-            <a
-              href="{% url 'login' %}"
-              class="text-sm font-medium text-gray-700 hover:text-amber-600"
-              >เข้าสู่ระบบ</a
-            >
-            <a
-              href="{% url 'register' %}"
-              class="text-sm bg-amber-600 hover:bg-amber-700 text-white font-medium px-4 py-2 rounded-xl transition"
-              >สมัครสมาชิก</a
-            >
+            <div class="flex items-center gap-2">
+              <!-- ปุ่มเข้าสู่ระบบ: บนมือถือเป็นปุ่มชัดเจน ข้อความบรรทัดเดียวไม่ตัดคำ -->
+              <a
+                href="{% url 'login' %}"
+                class="whitespace-nowrap text-xs sm:text-sm font-medium text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-full transition"
+              >
+                เข้าสู่ระบบ
+              </a>
+
+              <!-- ปุ่มสมัครสมาชิก: ซ่อนบนมือถือ (hidden) และโผล่เฉพาะจอคอม (md:inline-flex) -->
+              <a
+                href="{% url 'register' %}"
+                class="hidden md:inline-flex whitespace-nowrap text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 px-4 py-1.5 rounded-full transition shadow-sm"
+              >
+                สมัครสมาชิก
+              </a>
+            </div>
             {% endif %}
           </div>
         </div>
