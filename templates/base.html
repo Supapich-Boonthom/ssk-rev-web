@@ -900,6 +900,227 @@
           btn.dataset.loading = 'false';
         });
       }
+
+      // ==========================================
+      // Client-Side Image Compression & Upload Management
+      // ==========================================
+      function compressImage(file, maxDimension = 1600, quality = 0.82) {
+        return new Promise((resolve) => {
+          if (!file || (!file.type.startsWith('image/') && !file.name.toLowerCase().match(/\.(jpe?g|png|webp|heic|heif)$/i))) {
+            return resolve(file);
+          }
+          if (file.type === 'image/gif') {
+            return resolve(file);
+          }
+
+          const img = new Image();
+          const url = URL.createObjectURL(file);
+
+          img.onload = () => {
+            URL.revokeObjectURL(url);
+            let width = img.naturalWidth || img.width;
+            let height = img.naturalHeight || img.height;
+
+            if (!width || !height) {
+              return resolve(file);
+            }
+
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) return resolve(file);
+                const baseName = file.name.replace(/\.[^/.]+$/, '');
+                const newName = `${baseName || 'photo'}.jpg`;
+                const compressedFile = new File([blob], newName, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              },
+              'image/jpeg',
+              quality
+            );
+          };
+
+          img.onerror = () => {
+            URL.revokeObjectURL(url);
+            resolve(file);
+          };
+
+          img.src = url;
+        });
+      }
+
+      function setupMultiImageUploader(inputId, previewId, maxFiles = 6) {
+        const input = document.getElementById(inputId);
+        const previewContainer = document.getElementById(previewId);
+        if (!input || !previewContainer) return;
+
+        const form = input.closest('form');
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+        let selectedFiles = [];
+        let isProcessing = false;
+
+        if (form) {
+          form.addEventListener('submit', (e) => {
+            if (isProcessing) {
+              e.preventDefault();
+              alert('ระบบกำลังเตรียมรูปภาพ กรุณารอสักครู่...');
+            }
+          });
+        }
+
+        function renderPreviews() {
+          previewContainer.innerHTML = '';
+          if (selectedFiles.length === 0) {
+            previewContainer.classList.add('hidden');
+            return;
+          }
+          previewContainer.classList.remove('hidden');
+
+          selectedFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 shadow-xs bg-gray-50 group';
+
+            const img = document.createElement('img');
+            img.className = 'w-full h-full object-cover';
+            const objectUrl = URL.createObjectURL(file);
+            img.src = objectUrl;
+
+            // Size badge (KB)
+            const sizeBadge = document.createElement('span');
+            sizeBadge.className = 'absolute bottom-1 right-1 bg-black/65 text-white text-[9px] px-1.5 py-0.5 rounded-md font-mono';
+            sizeBadge.textContent = `${Math.round(file.size / 1024)}K`;
+
+            // Remove button (✕)
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'absolute top-1 right-1 w-5 h-5 bg-rose-500 hover:bg-rose-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md cursor-pointer transition active:scale-90';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.title = 'ลบรูปนี้';
+            removeBtn.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              URL.revokeObjectURL(objectUrl);
+              selectedFiles.splice(index, 1);
+              syncInputFiles();
+              renderPreviews();
+            };
+
+            item.appendChild(img);
+            item.appendChild(sizeBadge);
+            item.appendChild(removeBtn);
+            previewContainer.appendChild(item);
+          });
+        }
+
+        function syncInputFiles() {
+          if (window.DataTransfer) {
+            const dt = new DataTransfer();
+            selectedFiles.forEach(f => dt.items.add(f));
+            input.files = dt.files;
+          }
+        }
+
+        input.addEventListener('change', async function () {
+          const incoming = Array.from(this.files);
+          if (!incoming || incoming.length === 0) return;
+
+          const totalAllowed = maxFiles - selectedFiles.length;
+          if (totalAllowed <= 0) {
+            alert(`สามารถแนบรูปภาพได้สูงสุด ${maxFiles} รูปต่อรีวิว`);
+            syncInputFiles();
+            return;
+          }
+
+          const filesToProcess = incoming.slice(0, totalAllowed);
+          if (incoming.length > totalAllowed) {
+            alert(`แนบได้สูงสุด ${maxFiles} รูป (ระบบเลือกเฉพาะ ${totalAllowed} รูปแรกที่เพิ่มเข้ามา)`);
+          }
+
+          isProcessing = true;
+          let originalBtnText = '';
+          if (submitBtn) {
+            originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            submitBtn.innerHTML = '<span class="inline-flex items-center gap-1.5">⚡ กำลังย่อรูปภาพ...</span>';
+          }
+
+          previewContainer.classList.remove('hidden');
+          const statusMsg = document.createElement('div');
+          statusMsg.className = 'w-full text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2.5 flex items-center gap-2 mb-1';
+          statusMsg.innerHTML = '<svg class="animate-spin h-4 w-4 text-amber-600" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> กำลังบีบอัดรูปภาพให้เบาลงเพื่อความเร็วในการโหลด...';
+          previewContainer.prepend(statusMsg);
+
+          for (let i = 0; i < filesToProcess.length; i++) {
+            const compressed = await compressImage(filesToProcess[i], 1600, 0.82);
+            selectedFiles.push(compressed);
+          }
+
+          syncInputFiles();
+          renderPreviews();
+
+          isProcessing = false;
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            submitBtn.innerHTML = originalBtnText;
+          }
+        });
+      }
+
+      function setupSingleImageUploader(inputId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        const form = input.closest('form');
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+
+        input.addEventListener('change', async function () {
+          if (!this.files || this.files.length === 0) return;
+          const originalFile = this.files[0];
+
+          let originalBtnText = '';
+          if (submitBtn) {
+            originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            submitBtn.innerHTML = '<span class="inline-flex items-center gap-1.5">⚡ กำลังเตรียมรูปภาพ...</span>';
+          }
+
+          const compressed = await compressImage(originalFile, 1600, 0.85);
+
+          if (window.DataTransfer) {
+            const dt = new DataTransfer();
+            dt.items.add(compressed);
+            this.files = dt.files;
+          }
+
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            submitBtn.innerHTML = originalBtnText;
+          }
+        });
+      }
     </script>
   </body>
 </html>
