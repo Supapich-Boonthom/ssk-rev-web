@@ -263,9 +263,14 @@
         </div>
         <!-- แนบรูปภาพ + แสดงตัวอย่าง -->
         <div class="mt-4">
-          <label class="block text-sm font-semibold text-gray-700 mb-1"
-            >แนบรูปภาพ (เลือกได้หลายรูป)</label
-          >
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-sm font-semibold text-gray-700"
+              >แนบรูปภาพ (สูงสุด 6 รูป)</label
+            >
+            <span class="text-xs text-amber-600 font-medium flex items-center gap-1">
+              <span>⚡</span> ย่อขนาดให้อัตโนมัติ
+            </span>
+          </div>
           <input
             type="file"
             id="review-image-input"
@@ -731,43 +736,8 @@
   // กำหนดค่าเริ่มต้นเป็น 5 ดาว
   updateStars(5);
 
-  // แสดงรูปภาพตัวอย่างก่อนส่งรีวิว (Image Preview)
-  const imageInput = document.getElementById("review-image-input");
-  const previewContainer = document.getElementById("image-preview-container");
-
-  if (imageInput && previewContainer) {
-    imageInput.addEventListener("change", function () {
-      previewContainer.innerHTML = ""; // ล้างรูปพรีวิวเดิมก่อน
-
-      const files = Array.from(this.files);
-
-      if (files.length > 0) {
-        previewContainer.classList.remove("hidden");
-
-        files.forEach((file, index) => {
-          if (!file.type.startsWith("image/")) return;
-
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            const div = document.createElement("div");
-            div.className =
-              "relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50";
-
-            div.innerHTML = `
-              <img src="${e.target.result}" class="w-full h-full object-cover">
-              <span class="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-md font-medium">
-                ${index + 1}
-              </span>
-            `;
-            previewContainer.appendChild(div);
-          };
-          reader.readAsDataURL(file);
-        });
-      } else {
-        previewContainer.classList.add("hidden");
-      }
-    });
-  }
+  // เริ่มต้นระบบอัปโหลดรูปภาพบีบอัดอัตโนมัติ (Client-Side Compression)
+  setupMultiImageUploader("review-image-input", "image-preview-container", 6);
 
   // ปิดเมนู dropdown จุดสามจุด เมื่อคลิกพื้นที่อื่น
   document.addEventListener("click", (e) => {

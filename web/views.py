@@ -275,14 +275,20 @@ def place_detail(request, pk):
             review.user = request.user
             review.save()
 
-            # ดึงไฟล์ทั้งหมดที่ผู้ใช้เลือกพร้อมกัน
-            images = request.FILES.getlist("upload_images")
+            # ดึงไฟล์ทั้งหมดที่ผู้ใช้เลือกพร้อมกัน (จำกัดสูงสุด 6 รูป)
+            images = request.FILES.getlist("upload_images")[:6]
             for img in images:
-                ReviewImage.objects.create(review=review, image=img)
+                try:
+                    ReviewImage.objects.create(review=review, image=img)
+                except Exception as e:
+                    print(f"Error saving review image: {e}")
 
             # เผื่อกรณีเลือกไฟล์เดียวผ่าน name="image" ด้วย
             if "image" in request.FILES and not images:
-                ReviewImage.objects.create(review=review, image=request.FILES["image"])
+                try:
+                    ReviewImage.objects.create(review=review, image=request.FILES["image"])
+                except Exception as e:
+                    print(f"Error saving single review image: {e}")
 
             messages.success(request, "บันทึกรีวิวของคุณเรียบร้อยแล้ว!")
             return redirect("place_detail", pk=pk)
@@ -564,10 +570,13 @@ def edit_review(request, pk):
 
         review.save()
 
-        # แนบรูปเพิ่มเติมหากมีการอัปโหลด
-        images = request.FILES.getlist("upload_images")
+        # แนบรูปเพิ่มเติมหากมีการอัปโหลด (จำกัดสูงสุด 6 รูป)
+        images = request.FILES.getlist("upload_images")[:6]
         for img in images:
-            ReviewImage.objects.create(review=review, image=img)
+            try:
+                ReviewImage.objects.create(review=review, image=img)
+            except Exception as e:
+                print(f"Error saving edit review image: {e}")
 
         messages.success(request, "แก้ไขรีวิวของคุณเรียบร้อยแล้ว!")
         return redirect("place_detail", pk=review.place.pk)
@@ -654,16 +663,18 @@ def quick_review(request):
                 },
             )
 
-        # ค้นหาว่ามีชื่อนี้อยู่แล้วไหม ถ้ายังไม่มีให้สร้างขึ้นมาใหม่โดยอัตโนมัติ (is_approved=False)
-        place, created = Place.objects.get_or_create(
-            name=place_name,
-            defaults={
-                "is_approved": False,
-                "category": "other",
-                "description": "สถานที่เพิ่มโดยผู้ใช้ผ่านรีวิวด่วน (รอการตรวจสอบ)",
-                "created_by": request.user,
-            },
-        )
+        # ค้นหาว่ามีชื่อนี้อยู่แล้วไหม (ไม่แยกตัวพิมพ์เล็ก-ใหญ่) เพื่อป้องกัน MultipleObjectsReturned
+        place = Place.objects.filter(name__iexact=place_name).first()
+        created = False
+        if not place:
+            place = Place.objects.create(
+                name=place_name,
+                is_approved=False,
+                category="other",
+                description="สถานที่เพิ่มโดยผู้ใช้ผ่านรีวิวด่วน (รอการตรวจสอบ)",
+                created_by=request.user,
+            )
+            created = True
 
         comment = mask_profanity(comment)
         try:
@@ -681,12 +692,18 @@ def quick_review(request):
             comment=comment,
         )
 
-        # บันทึกรูปภาพหลายรูป (ReviewImage)
-        images = request.FILES.getlist("upload_images")
+        # บันทึกรูปภาพหลายรูป (ReviewImage) สูงสุด 6 รูป
+        images = request.FILES.getlist("upload_images")[:6]
         for img in images:
-            ReviewImage.objects.create(review=review, image=img)
+            try:
+                ReviewImage.objects.create(review=review, image=img)
+            except Exception as e:
+                print(f"Error saving quick review image: {e}")
         if "image" in request.FILES and not images:
-            ReviewImage.objects.create(review=review, image=request.FILES["image"])
+            try:
+                ReviewImage.objects.create(review=review, image=request.FILES["image"])
+            except Exception as e:
+                print(f"Error saving quick review single image: {e}")
 
         if created:
             messages.success(
